@@ -50,7 +50,7 @@ export default function Dashboard() {
         <StatsCard label="Action Required" value={actionRequired.length} icon={Clock} variant="warning" />
         <StatsCard label="Pending" value={pending.length} icon={FileText} variant="default" />
         <StatsCard label="Approved" value={approved.length} icon={CheckCircle2} variant="success" />
-        <StatsCard label="Rejected" value={rejected.length} icon={XCircle} variant="info" />
+        <StatsCard label="Rejected" value={rejected.length} icon={XCircle} variant="destructive" />
       </div>
 
       {/* Filters + Search */}
