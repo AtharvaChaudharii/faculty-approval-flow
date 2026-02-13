@@ -10,16 +10,26 @@ import {
   Menu,
   X,
   ChevronRight,
+  Bell,
+  UserCircle,
 } from 'lucide-react';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { currentUser, roleLabels, mockDocuments } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/upload', icon: Upload, label: 'Upload Document' },
   { path: '/archive', icon: Archive, label: 'Archive' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+  { path: '/settings', icon: UserCircle, label: 'Profile & Signatures' },
 ];
+
+const pageTitles: Record<string, string> = {
+  '/': 'Dashboard',
+  '/upload': 'Upload Document',
+  '/archive': 'Archive',
+  '/settings': 'Profile & Signatures',
+};
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -28,6 +38,13 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const pendingForUser = mockDocuments.filter(
+    (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')
+  );
+
+  const pageTitle = pageTitles[location.pathname] || '';
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -114,9 +131,79 @@ export default function AppLayout({ children }: AppLayoutProps) {
           >
             <Menu className="h-5 w-5" />
           </button>
+
+          {/* Page context */}
+          {pageTitle && (
+            <div className="hidden sm:flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">DocFlow</span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/50" />
+              <span className="font-medium">{pageTitle}</span>
+            </div>
+          )}
+
           <div className="flex-1" />
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{currentUser.department}</span>
+
+          <div className="flex items-center gap-3">
+            {/* Notification bell */}
+            <div className="relative">
+              <button
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <Bell className="h-4.5 w-4.5" />
+                {pendingForUser.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-semibold text-warning-foreground">
+                    {pendingForUser.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification dropdown */}
+              {notificationsOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 z-50 w-80 rounded-lg border bg-card shadow-elevated animate-fade-in">
+                    <div className="flex items-center justify-between border-b px-4 py-3">
+                      <h4 className="text-sm font-medium">Notifications</h4>
+                      {pendingForUser.length > 0 && (
+                        <span className="text-[11px] text-muted-foreground">{pendingForUser.length} pending</span>
+                      )}
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {pendingForUser.length === 0 ? (
+                        <div className="p-6 text-center text-sm text-muted-foreground">
+                          No pending actions
+                        </div>
+                      ) : (
+                        pendingForUser.map((doc) => (
+                          <Link
+                            key={doc.id}
+                            to={`/document/${doc.id}`}
+                            onClick={() => setNotificationsOpen(false)}
+                            className="flex items-start gap-3 border-b last:border-0 px-4 py-3 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10 mt-0.5">
+                              <FileText className="h-4 w-4 text-warning" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">{doc.title}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                From {doc.sender.name} • {formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </Link>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="h-6 w-px bg-border" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{currentUser.department}</span>
+            </div>
           </div>
         </header>
 
