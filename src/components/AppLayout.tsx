@@ -2,19 +2,11 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
-  LayoutDashboard,
-  Upload,
-  Archive,
-  Settings,
-  LogOut,
-  FileText,
-  Menu,
-  X,
-  ChevronRight,
-  Bell,
-  UserCircle,
+  LayoutDashboard, Upload, Archive, LogOut, FileText,
+  Menu, X, ChevronRight, Bell, UserCircle,
 } from 'lucide-react';
-import { currentUser, roleLabels, mockDocuments } from '@/lib/mock-data';
+import { currentUser, roleLabels } from '@/lib/mock-data';
+import { useDocuments } from '@/lib/document-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -40,8 +32,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { documents } = useDocuments();
 
-  const pendingForUser = mockDocuments.filter(
+  const pendingForUser = documents.filter(
     (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')
   );
 
@@ -49,22 +42,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out lg:static lg:translate-x-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        {/* Logo */}
+      <aside className={cn(
+        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out lg:static lg:translate-x-0',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-accent">
             <FileText className="h-4 w-4 text-sidebar-accent-foreground" />
@@ -73,15 +59,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <p className="text-sm font-semibold text-sidebar-primary">DocFlow</p>
             <p className="text-[10px] text-sidebar-foreground/60">Approval System</p>
           </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
-          >
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -92,9 +74,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150',
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                  isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -105,7 +85,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
           })}
         </nav>
 
-        {/* User section */}
         <div className="border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-9 w-9">
@@ -125,18 +104,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       </aside>
 
-      {/* Main content */}
+      {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar */}
         <header className="flex h-16 items-center gap-4 border-b bg-card px-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-muted-foreground hover:text-foreground"
-          >
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-muted-foreground hover:text-foreground">
             <Menu className="h-5 w-5" />
           </button>
-
-          {/* Page context */}
           {pageTitle && (
             <div className="hidden sm:flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">DocFlow</span>
@@ -144,11 +117,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <span className="font-medium">{pageTitle}</span>
             </div>
           )}
-
           <div className="flex-1" />
-
           <div className="flex items-center gap-3">
-            {/* Notification bell */}
             <div className="relative">
               <button
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
@@ -161,8 +131,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   </span>
                 )}
               </button>
-
-              {/* Notification dropdown */}
               {notificationsOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
@@ -175,9 +143,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     </div>
                     <div className="max-h-64 overflow-y-auto">
                       {pendingForUser.length === 0 ? (
-                        <div className="p-6 text-center text-sm text-muted-foreground">
-                          No pending actions
-                        </div>
+                        <div className="p-6 text-center text-sm text-muted-foreground">No pending actions</div>
                       ) : (
                         pendingForUser.map((doc) => (
                           <Link
@@ -206,18 +172,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </>
               )}
             </div>
-
             <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{currentUser.department}</span>
             </div>
           </div>
         </header>
-
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

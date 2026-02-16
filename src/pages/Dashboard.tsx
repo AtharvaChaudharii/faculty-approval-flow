@@ -1,33 +1,38 @@
 import { useState } from 'react';
-import { FileText, Clock, CheckCircle2, XCircle, Search, Filter } from 'lucide-react';
-import { mockDocuments, currentUser } from '@/lib/mock-data';
+import { FileText, Clock, CheckCircle2, XCircle, Search, Send, User } from 'lucide-react';
+import { currentUser } from '@/lib/mock-data';
 import type { DocumentStatus } from '@/lib/mock-data';
+import { useDocuments } from '@/lib/document-store';
 import DocumentCard from '@/components/DocumentCard';
 import StatsCard from '@/components/StatsCard';
 import { cn } from '@/lib/utils';
 
-const filters: { label: string; value: DocumentStatus | 'all' | 'action_required' }[] = [
+const filters: { label: string; value: DocumentStatus | 'all' | 'action_required' | 'submitted_by_me' }[] = [
   { label: 'All', value: 'all' },
   { label: 'Action Required', value: 'action_required' },
+  { label: 'Submitted by Me', value: 'submitted_by_me' },
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' },
 ];
 
 export default function Dashboard() {
+  const { documents } = useDocuments();
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const actionRequired = mockDocuments.filter(
+  const actionRequired = documents.filter(
     (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')
   );
-  const pending = mockDocuments.filter(d => d.status === 'pending');
-  const approved = mockDocuments.filter(d => d.status === 'approved');
-  const rejected = mockDocuments.filter(d => d.status === 'rejected');
+  const submittedByMe = documents.filter(d => d.sender.id === currentUser.id);
+  const pending = documents.filter(d => d.status === 'pending');
+  const approved = documents.filter(d => d.status === 'approved' || d.status === 'archived');
+  const rejected = documents.filter(d => d.status === 'rejected');
 
-  const filteredDocs = mockDocuments
+  const filteredDocs = documents
     .filter(d => {
       if (activeFilter === 'action_required') return actionRequired.some(a => a.id === d.id);
+      if (activeFilter === 'submitted_by_me') return d.sender.id === currentUser.id;
       if (activeFilter === 'all') return d.status !== 'archived';
       return d.status === activeFilter;
     })
@@ -55,13 +60,13 @@ export default function Dashboard() {
 
       {/* Filters + Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex gap-1 bg-muted p-1 rounded-lg">
+        <div className="flex gap-1 bg-muted p-1 rounded-lg flex-wrap">
           {filters.map((f) => (
             <button
               key={f.value}
               onClick={() => setActiveFilter(f.value)}
               className={cn(
-                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap',
                 activeFilter === f.value
                   ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -93,7 +98,12 @@ export default function Dashboard() {
         {filteredDocs.length === 0 ? (
           <div className="institutional-card p-12 text-center">
             <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
-            <p className="mt-3 text-sm text-muted-foreground">No documents found.</p>
+            <p className="mt-3 text-sm font-medium text-muted-foreground">No documents found.</p>
+            <p className="mt-1 text-xs text-muted-foreground/60">
+              {activeFilter === 'action_required' ? "You're all caught up. No documents waiting for your review." :
+               activeFilter === 'submitted_by_me' ? "You haven't submitted any documents yet." :
+               'Try adjusting your filters or search terms.'}
+            </p>
           </div>
         ) : (
           filteredDocs.map((doc) => <DocumentCard key={doc.id} doc={doc} />)

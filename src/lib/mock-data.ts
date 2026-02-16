@@ -18,6 +18,23 @@ export interface ApprovalStep {
   status: 'pending' | 'approved' | 'rejected' | 'waiting';
   acted_at?: string;
   comment?: string;
+  placements?: Placement[];
+}
+
+export interface AuditEntry {
+  id: string;
+  action: 'submitted' | 'approved' | 'rejected' | 'revised' | 'archived' | 'reminder_sent';
+  actor: User;
+  timestamp: string;
+  details?: string;
+  version?: number;
+}
+
+export interface DocumentVersion {
+  version: number;
+  file_name: string;
+  uploaded_at: string;
+  uploaded_by: User;
 }
 
 export interface Document {
@@ -32,6 +49,8 @@ export interface Document {
   approval_chain: ApprovalStep[];
   category: string;
   file_name: string;
+  audit_log: AuditEntry[];
+  version_history: DocumentVersion[];
 }
 
 export interface SignatureItem {
@@ -71,7 +90,9 @@ const users: User[] = [
   { id: '6', name: 'Dr. Amit Patel', email: 'amit@college.edu', role: 'faculty', department: 'Mathematics', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=AP&backgroundColor=3d2d1e&textColor=ffffff' },
 ];
 
-export const mockDocuments: Document[] = [
+export { users };
+
+export const initialMockDocuments: Document[] = [
   {
     id: 'doc-1',
     title: 'Revised Curriculum Framework for AI & ML Electives',
@@ -88,6 +109,13 @@ export const mockDocuments: Document[] = [
       { id: 's2', approver: currentUser, order_index: 1, status: 'pending' },
       { id: 's3', approver: users[3], order_index: 2, status: 'waiting' },
       { id: 's4', approver: users[4], order_index: 3, status: 'waiting' },
+    ],
+    audit_log: [
+      { id: 'a1', action: 'submitted', actor: users[1], timestamp: '2026-02-10T09:30:00Z', version: 1 },
+      { id: 'a2', action: 'approved', actor: users[2], timestamp: '2026-02-11T10:00:00Z', details: 'Approved by Asst. Professor' },
+    ],
+    version_history: [
+      { version: 1, file_name: 'curriculum-framework-aiml.pdf', uploaded_at: '2026-02-10T09:30:00Z', uploaded_by: users[1] },
     ],
   },
   {
@@ -106,6 +134,13 @@ export const mockDocuments: Document[] = [
       { id: 's6', approver: currentUser, order_index: 1, status: 'pending' },
       { id: 's7', approver: users[3], order_index: 2, status: 'waiting' },
     ],
+    audit_log: [
+      { id: 'a3', action: 'submitted', actor: users[5], timestamp: '2026-02-08T11:00:00Z', version: 1 },
+      { id: 'a4', action: 'approved', actor: users[2], timestamp: '2026-02-09T09:00:00Z' },
+    ],
+    version_history: [
+      { version: 1, file_name: 'fdp-budget-2026.pdf', uploaded_at: '2026-02-08T11:00:00Z', uploaded_by: users[5] },
+    ],
   },
   {
     id: 'doc-3',
@@ -117,12 +152,26 @@ export const mockDocuments: Document[] = [
     updated_at: '2026-02-05T17:00:00Z',
     version: 2,
     category: 'Procurement',
-    file_name: 'lab-equipment-notice.pdf',
+    file_name: 'lab-equipment-notice-v2.pdf',
     approval_chain: [
       { id: 's8', approver: users[2], order_index: 0, status: 'approved', acted_at: '2026-01-22T10:00:00Z' },
       { id: 's9', approver: currentUser, order_index: 1, status: 'approved', acted_at: '2026-01-25T11:00:00Z' },
       { id: 's10', approver: users[3], order_index: 2, status: 'approved', acted_at: '2026-02-01T09:00:00Z' },
       { id: 's11', approver: users[4], order_index: 3, status: 'approved', acted_at: '2026-02-05T17:00:00Z' },
+    ],
+    audit_log: [
+      { id: 'a5', action: 'submitted', actor: users[1], timestamp: '2026-01-15T10:00:00Z', version: 1 },
+      { id: 'a6', action: 'rejected', actor: users[2], timestamp: '2026-01-17T14:00:00Z', details: 'Missing vendor quotes' },
+      { id: 'a7', action: 'revised', actor: users[1], timestamp: '2026-01-20T10:00:00Z', version: 2, details: 'Added vendor quotes and comparison' },
+      { id: 'a8', action: 'approved', actor: users[2], timestamp: '2026-01-22T10:00:00Z' },
+      { id: 'a9', action: 'approved', actor: currentUser, timestamp: '2026-01-25T11:00:00Z' },
+      { id: 'a10', action: 'approved', actor: users[3], timestamp: '2026-02-01T09:00:00Z' },
+      { id: 'a11', action: 'approved', actor: users[4], timestamp: '2026-02-05T17:00:00Z' },
+      { id: 'a12', action: 'archived', actor: users[4], timestamp: '2026-02-05T17:00:00Z', details: 'Auto-archived after final approval' },
+    ],
+    version_history: [
+      { version: 1, file_name: 'lab-equipment-notice.pdf', uploaded_at: '2026-01-15T10:00:00Z', uploaded_by: users[1] },
+      { version: 2, file_name: 'lab-equipment-notice-v2.pdf', uploaded_at: '2026-01-20T10:00:00Z', uploaded_by: users[1] },
     ],
   },
   {
@@ -140,6 +189,13 @@ export const mockDocuments: Document[] = [
       { id: 's12', approver: currentUser, order_index: 0, status: 'rejected', acted_at: '2026-02-06T13:00:00Z', comment: 'Budget details insufficient. Please provide itemized cost breakdown.' },
       { id: 's13', approver: users[3], order_index: 1, status: 'waiting' },
     ],
+    audit_log: [
+      { id: 'a13', action: 'submitted', actor: users[2], timestamp: '2026-02-01T08:00:00Z', version: 1 },
+      { id: 'a14', action: 'rejected', actor: currentUser, timestamp: '2026-02-06T13:00:00Z', details: 'Budget details insufficient. Please provide itemized cost breakdown.' },
+    ],
+    version_history: [
+      { version: 1, file_name: 'iv-proposal-blr.pdf', uploaded_at: '2026-02-01T08:00:00Z', uploaded_by: users[2] },
+    ],
   },
   {
     id: 'doc-5',
@@ -155,6 +211,12 @@ export const mockDocuments: Document[] = [
     approval_chain: [
       { id: 's14', approver: users[3], order_index: 0, status: 'pending' },
       { id: 's15', approver: users[4], order_index: 1, status: 'waiting' },
+    ],
+    audit_log: [
+      { id: 'a15', action: 'submitted', actor: currentUser, timestamp: '2026-02-12T07:00:00Z', version: 1 },
+    ],
+    version_history: [
+      { version: 1, file_name: 'academic-calendar-2026-27.pdf', uploaded_at: '2026-02-12T07:00:00Z', uploaded_by: currentUser },
     ],
   },
   {
@@ -172,6 +234,16 @@ export const mockDocuments: Document[] = [
       { id: 's16', approver: users[2], order_index: 0, status: 'approved', acted_at: '2025-12-18T10:00:00Z' },
       { id: 's17', approver: currentUser, order_index: 1, status: 'approved', acted_at: '2025-12-22T09:00:00Z' },
       { id: 's18', approver: users[3], order_index: 2, status: 'approved', acted_at: '2026-01-05T11:00:00Z' },
+    ],
+    audit_log: [
+      { id: 'a16', action: 'submitted', actor: users[1], timestamp: '2025-12-15T09:00:00Z', version: 1 },
+      { id: 'a17', action: 'approved', actor: users[2], timestamp: '2025-12-18T10:00:00Z' },
+      { id: 'a18', action: 'approved', actor: currentUser, timestamp: '2025-12-22T09:00:00Z' },
+      { id: 'a19', action: 'approved', actor: users[3], timestamp: '2026-01-05T11:00:00Z' },
+      { id: 'a20', action: 'archived', actor: users[3], timestamp: '2026-01-10T14:00:00Z' },
+    ],
+    version_history: [
+      { version: 1, file_name: 'guest-lecture-quantum.pdf', uploaded_at: '2025-12-15T09:00:00Z', uploaded_by: users[1] },
     ],
   },
 ];
