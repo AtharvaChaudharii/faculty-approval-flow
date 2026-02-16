@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { FileText, ArrowRight, User } from 'lucide-react';
+import { FileText, ArrowRight } from 'lucide-react';
 import type { Document } from '@/lib/mock-data';
 import { roleLabels } from '@/lib/mock-data';
 import StatusBadge from './StatusBadge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function DocumentCard({ doc }: { doc: Document }) {
@@ -32,8 +33,11 @@ export default function DocumentCard({ doc }: { doc: Document }) {
 
       <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1">
-            <User className="h-3 w-3" />
+          <span className="flex items-center gap-1.5">
+            <Avatar className="h-4 w-4">
+              <AvatarImage src={doc.sender.avatar} />
+              <AvatarFallback className="text-[7px]">{doc.sender.name.split(' ').map(n => n[0]).join('').slice(0,2)}</AvatarFallback>
+            </Avatar>
             {doc.sender.name}
           </span>
           <span>{doc.category}</span>
