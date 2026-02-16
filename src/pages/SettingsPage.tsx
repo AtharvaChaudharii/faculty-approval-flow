@@ -1,39 +1,28 @@
 import { useState, useRef } from 'react';
-import { Pen, Upload, Trash2, Plus, Image } from 'lucide-react';
+import { Pen, Trash2, Plus, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { currentUser, roleLabels } from '@/lib/mock-data';
-import { cn } from '@/lib/utils';
+import { useSignatures } from '@/lib/signature-store';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-
-interface SignatureItem {
-  id: string;
-  name: string;
-  type: 'signature' | 'stamp';
-  preview?: string;
-}
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [signatures, setSignatures] = useState<SignatureItem[]>([
-    { id: '1', name: 'Official Signature', type: 'signature' },
-    { id: '2', name: 'Department Stamp', type: 'stamp' },
-  ]);
+  const { signatures, addSignature, removeSignature } = useSignatures();
   const [addingType, setAddingType] = useState<'signature' | 'stamp' | null>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !addingType) return;
-
     const reader = new FileReader();
     reader.onload = () => {
-      const newSig: SignatureItem = {
+      addSignature({
         id: Date.now().toString(),
         name: file.name.replace(/\.[^.]+$/, ''),
         type: addingType,
         preview: reader.result as string,
-      };
-      setSignatures(prev => [...prev, newSig]);
+      });
       setAddingType(null);
       toast({ title: `${addingType === 'signature' ? 'Signature' : 'Stamp'} added successfully.` });
     };
@@ -42,7 +31,7 @@ export default function SettingsPage() {
   };
 
   const handleDelete = (id: string) => {
-    setSignatures(prev => prev.filter(s => s.id !== id));
+    removeSignature(id);
     toast({ title: 'Removed successfully.' });
   };
 
@@ -50,6 +39,8 @@ export default function SettingsPage() {
     setAddingType(type);
     fileInputRef.current?.click();
   };
+
+  const initials = currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -60,7 +51,16 @@ export default function SettingsPage() {
 
       {/* Profile */}
       <div className="institutional-card p-6">
-        <h3 className="mb-4">Profile Information</h3>
+        <div className="flex items-center gap-4 mb-6">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={currentUser.avatar} />
+            <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3>{currentUser.name}</h3>
+            <p className="text-sm text-muted-foreground">{roleLabels[currentUser.role]} · {currentUser.department}</p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs text-muted-foreground">Full Name</label>
@@ -89,15 +89,7 @@ export default function SettingsPage() {
             <p className="text-xs text-muted-foreground mt-0.5">Upload digital signatures and stamps for document approval.</p>
           </div>
         </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/svg+xml"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
-
+        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleFileUpload} className="hidden" />
         <div className="space-y-3">
           {signatures.map((sig) => (
             <div key={sig.id} className="flex items-center gap-4 rounded-lg border p-4">
@@ -118,15 +110,12 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
-
         <div className="flex gap-2 mt-4">
           <Button variant="outline" size="sm" onClick={() => startUpload('signature')}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Signature
+            <Plus className="h-4 w-4 mr-1.5" /> Add Signature
           </Button>
           <Button variant="outline" size="sm" onClick={() => startUpload('stamp')}>
-            <Image className="h-4 w-4 mr-1.5" />
-            Add Stamp
+            <Image className="h-4 w-4 mr-1.5" /> Add Stamp
           </Button>
         </div>
       </div>
