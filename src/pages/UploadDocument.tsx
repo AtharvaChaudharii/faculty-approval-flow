@@ -21,8 +21,17 @@ export default function UploadDocument() {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
+  const [approverSearch, setApproverSearch] = useState('');
   const [aiTitle, setAiTitle] = useState('');
   const [aiSummary, setAiSummary] = useState('');
+
+  const filteredApprovers = useMemo(() => {
+    if (!approverSearch.trim()) return availableApprovers;
+    const q = approverSearch.toLowerCase();
+    return availableApprovers.filter(a =>
+      a.name.toLowerCase().includes(q) || roleLabels[a.role].toLowerCase().includes(q)
+    );
+  }, [approverSearch]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
