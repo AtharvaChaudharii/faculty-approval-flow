@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import UserAvatar from '@/components/UserAvatar';
 
-const navItems = [
+const allNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/upload', icon: Upload, label: 'Upload Document' },
+  { path: '/upload', icon: Upload, label: 'Upload Document', hideForRoles: ['director'] as string[] },
   { path: '/archive', icon: Archive, label: 'Archive' },
   { path: '/settings', icon: UserCircle, label: 'Profile & Signatures' },
 ];
