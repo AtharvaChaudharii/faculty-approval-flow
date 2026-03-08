@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Upload, FileText, Sparkles, Check, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Upload, FileText, Sparkles, Check, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { roleLabels, currentUser, users } from '@/lib/mock-data';
@@ -21,8 +21,17 @@ export default function UploadDocument() {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
+  const [approverSearch, setApproverSearch] = useState('');
   const [aiTitle, setAiTitle] = useState('');
   const [aiSummary, setAiSummary] = useState('');
+
+  const filteredApprovers = useMemo(() => {
+    if (!approverSearch.trim()) return availableApprovers;
+    const q = approverSearch.toLowerCase();
+    return availableApprovers.filter(a =>
+      a.name.toLowerCase().includes(q) || roleLabels[a.role].toLowerCase().includes(q)
+    );
+  }, [approverSearch]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -213,9 +222,21 @@ export default function UploadDocument() {
 
           <div className="institutional-card p-5">
             <h3 className="mb-1">Approval Chain</h3>
-            <p className="text-xs text-muted-foreground mb-4">Select approvers in hierarchical order. Documents will be routed sequentially.</p>
-            <div className="space-y-2">
-              {availableApprovers.map((a) => {
+            <p className="text-xs text-muted-foreground mb-3">Select approvers in hierarchical order. Documents will be routed sequentially.</p>
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                value={approverSearch}
+                onChange={(e) => setApproverSearch(e.target.value)}
+                placeholder="Search by name or role..."
+                className="w-full rounded-lg border bg-card pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20 placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="space-y-2 max-h-[360px] overflow-y-auto">
+              {filteredApprovers.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No matching approvers found.</p>
+              )}
+              {filteredApprovers.map((a) => {
                 const isSelected = selectedApprovers.includes(a.id);
                 const order = selectedApprovers.indexOf(a.id);
                 return (
