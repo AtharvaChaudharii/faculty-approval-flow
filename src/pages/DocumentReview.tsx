@@ -11,7 +11,7 @@ import type { Placement, SignatureItem } from '@/lib/mock-data';
 import { useSignatures } from '@/lib/signature-store';
 import { useDocuments } from '@/lib/document-store';
 import StatusBadge from '@/components/StatusBadge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import UserAvatar from '@/components/UserAvatar';
 import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
