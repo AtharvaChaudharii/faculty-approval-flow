@@ -233,7 +233,10 @@ export default function UploadDocument() {
               />
             </div>
             <div className="space-y-2 max-h-[360px] overflow-y-auto">
-              {availableApprovers.map((a) => {
+              {filteredApprovers.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No matching approvers found.</p>
+              )}
+              {filteredApprovers.map((a) => {
                 const isSelected = selectedApprovers.includes(a.id);
                 const order = selectedApprovers.indexOf(a.id);
                 return (
