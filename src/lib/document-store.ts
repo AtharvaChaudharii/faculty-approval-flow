@@ -1,6 +1,7 @@
 import { useState, useCallback, useSyncExternalStore } from 'react';
 import type { Document, Placement, AuditEntry, User } from './mock-data';
-import { initialMockDocuments, currentUser } from './mock-data';
+import { initialMockDocuments } from './mock-data';
+import { getCurrentUser } from './auth-store';
 
 // Deep clone to avoid mutation issues
 let documents: Document[] = JSON.parse(JSON.stringify(initialMockDocuments));
