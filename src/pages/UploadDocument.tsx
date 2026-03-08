@@ -33,7 +33,7 @@ export default function UploadDocument() {
     return availableApprovers.filter(a =>
       a.name.toLowerCase().includes(q) || roleLabels[a.role].toLowerCase().includes(q)
     );
-  }, [approverSearch]);
+  }, [approverSearch, availableApprovers]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
