@@ -25,6 +25,8 @@ export function useDocuments() {
 
   const getDoc = useCallback((id: string) => docs.find(d => d.id === id), [docs]);
 
+  const currentUser = getCurrentUser();
+
   const approveDocument = useCallback((docId: string, placements: Placement[]) => {
     documents = documents.map(doc => {
       if (doc.id !== docId) return doc;

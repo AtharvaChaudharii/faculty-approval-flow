@@ -18,6 +18,7 @@ const filters: { label: string; value: DocumentStatus | 'all' | 'action_required
 
 export default function Dashboard() {
   const { documents } = useDocuments();
+  const currentUser = useCurrentUser();
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
