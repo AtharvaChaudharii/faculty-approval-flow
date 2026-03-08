@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { FileText, ArrowRight, Clock } from 'lucide-react';
 import type { Document } from '@/lib/mock-data';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { roleLabels } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import StatusBadge from './StatusBadge';
 import UserAvatar from '@/components/UserAvatar';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
 
 export default function DocumentCard({ doc }: { doc: Document }) {
+  const currentUser = useCurrentUser();
   const currentStep = doc.approval_chain.find(s => s.status === 'pending');
   const completedSteps = doc.approval_chain.filter(s => s.status === 'approved').length;
   const totalSteps = doc.approval_chain.length;

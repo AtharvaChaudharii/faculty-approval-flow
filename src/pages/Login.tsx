@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Eye, EyeOff } from 'lucide-react';
+import { FileText, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { loginByEmail, useCurrentUser } from '@/lib/auth-store';
+import { users, roleLabels } from '@/lib/mock-data';
 
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/');
+    setError('');
+    const user = loginByEmail(email);
+    if (user) {
+      navigate('/');
+    } else {
+      setError('No account found with this email. Try one of the demo accounts below.');
+    }
   };
 
   return (
@@ -57,7 +66,7 @@ export default function Login() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 placeholder="name@college.edu"
                 className="mt-1.5 w-full rounded-lg border bg-card px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
               />
@@ -83,14 +92,42 @@ export default function Login() {
               </div>
             </div>
 
+            {error && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <Button type="submit" className="w-full mt-2">
               Sign In
             </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              Contact your administrator if you need access.
-            </p>
           </form>
+
+          {/* Demo accounts */}
+          <div className="mt-8 border-t pt-6">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Demo accounts — click to autofill:</p>
+            <div className="space-y-2">
+              {users.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => { setEmail(u.email); setError(''); }}
+                  className="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                    {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{u.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{u.email}</p>
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {roleLabels[u.role]}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

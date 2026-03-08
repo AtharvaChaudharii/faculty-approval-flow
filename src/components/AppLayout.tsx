@@ -4,15 +4,16 @@ import {
   LayoutDashboard, Upload, Archive, LogOut, FileText,
   Menu, X, ChevronRight, Bell, UserCircle,
 } from 'lucide-react';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { roleLabels } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import { useDocuments } from '@/lib/document-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import UserAvatar from '@/components/UserAvatar';
 
-const navItems = [
+const allNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/upload', icon: Upload, label: 'Upload Document' },
+  { path: '/upload', icon: Upload, label: 'Upload Document', hideForRoles: ['director'] as string[] },
   { path: '/archive', icon: Archive, label: 'Archive' },
   { path: '/settings', icon: UserCircle, label: 'Profile & Signatures' },
 ];
@@ -30,9 +31,12 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
+  const currentUser = useCurrentUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { documents } = useDocuments();
+
+  const navItems = allNavItems.filter(item => !item.hideForRoles?.includes(currentUser.role));
 
   const pendingForUser = documents.filter(
     (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')

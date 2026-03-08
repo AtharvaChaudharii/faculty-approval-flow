@@ -1,13 +1,15 @@
 import { useState, useRef } from 'react';
 import { Pen, Trash2, Plus, Image, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { roleLabels } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import { useSignatures } from '@/lib/signature-store';
 import { useProfilePhotos } from '@/lib/profile-photo-store';
 import UserAvatar from '@/components/UserAvatar';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
+  const currentUser = useCurrentUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);

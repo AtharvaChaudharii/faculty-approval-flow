@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { FileText, Clock, CheckCircle2, XCircle, Search, Send, User } from 'lucide-react';
-import { currentUser } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import type { DocumentStatus } from '@/lib/mock-data';
 import { useDocuments } from '@/lib/document-store';
 import DocumentCard from '@/components/DocumentCard';
 import StatsCard from '@/components/StatsCard';
 import { cn } from '@/lib/utils';
 
-const filters: { label: string; value: DocumentStatus | 'all' | 'action_required' | 'submitted_by_me' }[] = [
+const allFilters: { label: string; value: DocumentStatus | 'all' | 'action_required' | 'submitted_by_me'; hideForRoles?: string[] }[] = [
   { label: 'All', value: 'all' },
   { label: 'Action Required', value: 'action_required' },
-  { label: 'Submitted by Me', value: 'submitted_by_me' },
+  { label: 'Submitted by Me', value: 'submitted_by_me', hideForRoles: ['director'] },
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' },
@@ -18,9 +18,11 @@ const filters: { label: string; value: DocumentStatus | 'all' | 'action_required
 
 export default function Dashboard() {
   const { documents } = useDocuments();
+  const currentUser = useCurrentUser();
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
+  const filters = allFilters.filter(f => !f.hideForRoles?.includes(currentUser.role));
   const actionRequired = documents.filter(
     (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')
   );

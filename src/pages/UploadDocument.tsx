@@ -2,21 +2,23 @@ import { useState, useMemo } from 'react';
 import { Upload, FileText, Sparkles, Check, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { roleLabels, currentUser, users } from '@/lib/mock-data';
+import { roleLabels, users } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import UserAvatar from '@/components/UserAvatar';
 import type { UserRole, Document } from '@/lib/mock-data';
 import { useDocuments } from '@/lib/document-store';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-const availableApprovers = users.filter(u => u.id !== currentUser.id);
-
 type UploadStep = 'upload' | 'analysis' | 'chain' | 'confirm';
 
 export default function UploadDocument() {
   const navigate = useNavigate();
+  const currentUser = useCurrentUser();
   const { toast } = useToast();
   const { submitDocument } = useDocuments();
+
+  const availableApprovers = users.filter(u => u.id !== currentUser.id);
   const [step, setStep] = useState<UploadStep>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -31,7 +33,7 @@ export default function UploadDocument() {
     return availableApprovers.filter(a =>
       a.name.toLowerCase().includes(q) || roleLabels[a.role].toLowerCase().includes(q)
     );
-  }, [approverSearch]);
+  }, [approverSearch, availableApprovers]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();

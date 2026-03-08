@@ -1,6 +1,7 @@
 import { useState, useCallback, useSyncExternalStore } from 'react';
 import type { Document, Placement, AuditEntry, User } from './mock-data';
-import { initialMockDocuments, currentUser } from './mock-data';
+import { initialMockDocuments } from './mock-data';
+import { getCurrentUser } from './auth-store';
 
 // Deep clone to avoid mutation issues
 let documents: Document[] = JSON.parse(JSON.stringify(initialMockDocuments));
@@ -23,6 +24,8 @@ export function useDocuments() {
   const docs = useSyncExternalStore(subscribe, getSnapshot);
 
   const getDoc = useCallback((id: string) => docs.find(d => d.id === id), [docs]);
+
+  const currentUser = getCurrentUser();
 
   const approveDocument = useCallback((docId: string, placements: Placement[]) => {
     documents = documents.map(doc => {
