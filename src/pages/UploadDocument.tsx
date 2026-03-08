@@ -228,11 +228,15 @@ export default function UploadDocument() {
                     )}
                   >
                     <div className={cn(
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold',
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold',
                       isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                     )}>
                       {isSelected ? order + 1 : ''}
                     </div>
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarImage src={a.avatar} />
+                      <AvatarFallback className="text-[10px] font-medium">{a.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</AvatarFallback>
+                    </Avatar>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{a.name}</p>
                       <p className="text-xs text-muted-foreground">{roleLabels[a.role]}</p>
