@@ -163,10 +163,7 @@ export default function DocumentReview() {
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <Avatar className="h-5 w-5">
-                <AvatarImage src={doc.sender.avatar} />
-                <AvatarFallback className="text-[8px]">{initials(doc.sender.name)}</AvatarFallback>
-              </Avatar>
+              <UserAvatar userId={doc.sender.id} name={doc.sender.name} fallbackAvatar={doc.sender.avatar} className="h-5 w-5" fallbackClassName="text-[8px]" />
               {doc.sender.name}
             </span>
             <span>{doc.category}</span>
