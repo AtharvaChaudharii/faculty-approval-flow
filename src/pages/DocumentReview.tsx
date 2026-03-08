@@ -340,10 +340,7 @@ export default function DocumentReview() {
 
               {placements.length > 0 && (
                 <div className="rounded-lg border bg-muted/50 p-3 text-center">
-                  <Avatar className="h-8 w-8 mx-auto mb-1">
-                    <AvatarImage src={currentUser.avatar} />
-                    <AvatarFallback className="text-[10px]">{initials(currentUser.name)}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar userId={currentUser.id} name={currentUser.name} fallbackAvatar={currentUser.avatar} className="h-8 w-8 mx-auto mb-1" fallbackClassName="text-[10px]" />
                   <p className="text-xs font-semibold">{currentUser.name}</p>
                   <p className="text-[10px] text-muted-foreground">{roleLabels[currentUser.role]}</p>
                 </div>
