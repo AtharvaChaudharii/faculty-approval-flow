@@ -232,24 +232,22 @@ export default function DocumentReview() {
               {doc.approval_chain.map((step, i) => (
                 <div key={step.id} className="flex items-start gap-3">
                   <div className="flex flex-col items-center">
-                    <Avatar className={cn('h-7 w-7 ring-2',
-                      step.status === 'approved' ? 'ring-success/30' :
-                      step.status === 'rejected' ? 'ring-destructive/30' :
-                      step.status === 'pending' ? 'ring-warning/30' : 'ring-muted'
-                    )}>
-                      <AvatarImage src={step.approver.avatar} />
-                      <AvatarFallback className={cn('text-[9px] font-semibold',
+                    <UserAvatar
+                      userId={step.approver.id}
+                      name={step.approver.name}
+                      fallbackAvatar={step.approver.avatar}
+                      className={cn('h-7 w-7 ring-2',
+                        step.status === 'approved' ? 'ring-success/30' :
+                        step.status === 'rejected' ? 'ring-destructive/30' :
+                        step.status === 'pending' ? 'ring-warning/30' : 'ring-muted'
+                      )}
+                      fallbackClassName={cn('text-[9px] font-semibold',
                         step.status === 'approved' ? 'bg-success/10 text-success' :
                         step.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
                         step.status === 'pending' ? 'bg-warning/10 text-warning' :
                         'bg-muted text-muted-foreground'
-                      )}>
-                        {step.status === 'approved' ? <CheckCircle2 className="h-3.5 w-3.5" /> :
-                         step.status === 'rejected' ? <XCircle className="h-3.5 w-3.5" /> :
-                         step.status === 'pending' ? <Clock className="h-3.5 w-3.5" /> :
-                         initials(step.approver.name)}
-                      </AvatarFallback>
-                    </Avatar>
+                      )}
+                    />
                     {i < doc.approval_chain.length - 1 && <div className="w-px h-4 bg-border mt-1" />}
                   </div>
                   <div className="pt-0.5">
