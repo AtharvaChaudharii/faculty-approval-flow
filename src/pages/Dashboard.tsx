@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
 
   const filters = allFilters.filter(f => !f.hideForRoles?.includes(currentUser.role));
+  const actionRequired = documents.filter(
     (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')
   );
   const submittedByMe = documents.filter(d => d.sender.id === currentUser.id);
