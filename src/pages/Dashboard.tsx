@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FileText, Clock, CheckCircle2, XCircle, Search, Send, User } from 'lucide-react';
-import { currentUser } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import type { DocumentStatus } from '@/lib/mock-data';
 import { useDocuments } from '@/lib/document-store';
 import DocumentCard from '@/components/DocumentCard';
