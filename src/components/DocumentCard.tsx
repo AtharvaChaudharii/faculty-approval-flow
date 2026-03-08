@@ -3,7 +3,7 @@ import { FileText, ArrowRight, Clock } from 'lucide-react';
 import type { Document } from '@/lib/mock-data';
 import { currentUser, roleLabels } from '@/lib/mock-data';
 import StatusBadge from './StatusBadge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import UserAvatar from '@/components/UserAvatar';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
 
 export default function DocumentCard({ doc }: { doc: Document }) {
@@ -14,7 +14,6 @@ export default function DocumentCard({ doc }: { doc: Document }) {
     s => s.approver.id === currentUser.id && s.status === 'pending'
   );
 
-  // Calculate pending duration
   const lastActionDate = doc.audit_log?.length
     ? new Date(doc.audit_log[doc.audit_log.length - 1].timestamp)
     : new Date(doc.updated_at);
@@ -55,10 +54,13 @@ export default function DocumentCard({ doc }: { doc: Document }) {
       <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
-            <Avatar className="h-4 w-4">
-              <AvatarImage src={doc.sender.avatar} />
-              <AvatarFallback className="text-[7px]">{doc.sender.name.split(' ').map(n => n[0]).join('').slice(0,2)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              userId={doc.sender.id}
+              name={doc.sender.name}
+              fallbackAvatar={doc.sender.avatar}
+              className="h-4 w-4"
+              fallbackClassName="text-[7px]"
+            />
             {doc.sender.name}
           </span>
           <span>{doc.category}</span>

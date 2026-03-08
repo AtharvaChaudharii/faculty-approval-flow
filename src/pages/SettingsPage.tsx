@@ -1,16 +1,21 @@
 import { useState, useRef } from 'react';
-import { Pen, Trash2, Plus, Image } from 'lucide-react';
+import { Pen, Trash2, Plus, Image, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { currentUser, roleLabels } from '@/lib/mock-data';
 import { useSignatures } from '@/lib/signature-store';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useProfilePhotos } from '@/lib/profile-photo-store';
+import UserAvatar from '@/components/UserAvatar';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const { signatures, addSignature, removeSignature } = useSignatures();
+  const { getPhoto, setPhoto, removePhoto } = useProfilePhotos();
   const [addingType, setAddingType] = useState<'signature' | 'stamp' | null>(null);
+
+  const profilePhoto = getPhoto(currentUser.id);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,6 +35,23 @@ export default function SettingsPage() {
     e.target.value = '';
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhoto(currentUser.id, reader.result as string);
+      toast({ title: 'Profile photo updated successfully.' });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleRemovePhoto = () => {
+    removePhoto(currentUser.id);
+    toast({ title: 'Profile photo removed.' });
+  };
+
   const handleDelete = (id: string) => {
     removeSignature(id);
     toast({ title: 'Removed successfully.' });
@@ -39,8 +61,6 @@ export default function SettingsPage() {
     setAddingType(type);
     fileInputRef.current?.click();
   };
-
-  const initials = currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -52,13 +72,41 @@ export default function SettingsPage() {
       {/* Profile */}
       <div className="institutional-card p-6">
         <div className="flex items-center gap-4 mb-6">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={currentUser.avatar} />
-            <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
-          </Avatar>
+          <div className="relative group">
+            <UserAvatar
+              userId={currentUser.id}
+              name={currentUser.name}
+              fallbackAvatar={currentUser.avatar}
+              className="h-16 w-16"
+              fallbackClassName="text-lg font-semibold"
+            />
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/50 text-background opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Camera className="h-5 w-5" />
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
+          </div>
           <div>
             <h3>{currentUser.name}</h3>
             <p className="text-sm text-muted-foreground">{roleLabels[currentUser.role]} · {currentUser.department}</p>
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+                <Camera className="h-3.5 w-3.5 mr-1.5" /> {profilePhoto ? 'Change Photo' : 'Upload Photo'}
+              </Button>
+              {profilePhoto && (
+                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/5" onClick={handleRemovePhoto}>
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Remove
+                </Button>
+              )}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
