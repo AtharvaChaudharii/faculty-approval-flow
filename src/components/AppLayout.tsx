@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   LayoutDashboard, Upload, Archive, LogOut, FileText,
   Menu, X, ChevronRight, Bell, UserCircle,
@@ -9,6 +8,7 @@ import { currentUser, roleLabels } from '@/lib/mock-data';
 import { useDocuments } from '@/lib/document-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import UserAvatar from '@/components/UserAvatar';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -87,12 +87,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         <div className="border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={currentUser.avatar} />
-              <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">
-                {currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              userId={currentUser.id}
+              name={currentUser.name}
+              fallbackAvatar={currentUser.avatar}
+              className="h-9 w-9"
+              fallbackClassName="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">{currentUser.name}</p>
               <p className="text-[11px] text-sidebar-foreground/50">{roleLabels[currentUser.role]}</p>
@@ -152,12 +153,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             onClick={() => setNotificationsOpen(false)}
                             className="flex items-start gap-3 border-b last:border-0 px-4 py-3 hover:bg-muted/50 transition-colors"
                           >
-                            <Avatar className="h-8 w-8 shrink-0 mt-0.5">
-                              <AvatarImage src={doc.sender.avatar} />
-                              <AvatarFallback className="text-[9px] bg-warning/10 text-warning">
-                                {doc.sender.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                              userId={doc.sender.id}
+                              name={doc.sender.name}
+                              fallbackAvatar={doc.sender.avatar}
+                              className="h-8 w-8 mt-0.5"
+                              fallbackClassName="text-[9px] bg-warning/10 text-warning"
+                            />
                             <div className="min-w-0">
                               <p className="text-sm font-medium truncate">{doc.title}</p>
                               <p className="text-[11px] text-muted-foreground mt-0.5">
