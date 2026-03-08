@@ -7,10 +7,10 @@ import DocumentCard from '@/components/DocumentCard';
 import StatsCard from '@/components/StatsCard';
 import { cn } from '@/lib/utils';
 
-const filters: { label: string; value: DocumentStatus | 'all' | 'action_required' | 'submitted_by_me' }[] = [
+const allFilters: { label: string; value: DocumentStatus | 'all' | 'action_required' | 'submitted_by_me'; hideForRoles?: string[] }[] = [
   { label: 'All', value: 'all' },
   { label: 'Action Required', value: 'action_required' },
-  { label: 'Submitted by Me', value: 'submitted_by_me' },
+  { label: 'Submitted by Me', value: 'submitted_by_me', hideForRoles: ['director'] },
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' },
