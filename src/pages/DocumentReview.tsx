@@ -43,6 +43,7 @@ export default function DocumentReview() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getDoc, approveDocument, rejectDocument, reviseDocument } = useDocuments();
+  const currentUser = useCurrentUser();
   const doc = getDoc(id || '');
   const { signatures } = useSignatures();
   const [showRejectModal, setShowRejectModal] = useState(false);
