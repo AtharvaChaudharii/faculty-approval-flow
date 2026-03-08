@@ -3,6 +3,7 @@ import { Upload, FileText, Sparkles, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { roleLabels, currentUser, users } from '@/lib/mock-data';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { UserRole, Document } from '@/lib/mock-data';
 import { useDocuments } from '@/lib/document-store';
 import { useToast } from '@/hooks/use-toast';
