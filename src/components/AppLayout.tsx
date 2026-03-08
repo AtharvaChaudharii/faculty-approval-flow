@@ -31,9 +31,12 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
+  const currentUser = useCurrentUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { documents } = useDocuments();
+
+  const navItems = allNavItems.filter(item => !item.hideForRoles?.includes(currentUser.role));
 
   const pendingForUser = documents.filter(
     (d) => d.status === 'pending' && d.approval_chain.some(s => s.approver.id === currentUser.id && s.status === 'pending')
