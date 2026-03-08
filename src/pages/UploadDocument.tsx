@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Upload, FileText, Sparkles, Check, X } from 'lucide-react';
+import { Upload, FileText, Sparkles, Check, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { roleLabels, currentUser, users } from '@/lib/mock-data';
