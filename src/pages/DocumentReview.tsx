@@ -443,10 +443,7 @@ export default function DocumentReview() {
                   const config = auditActionLabels[entry.action] || { label: entry.action, color: 'text-muted-foreground' };
                   return (
                     <div key={entry.id} className="flex items-start gap-3 text-xs">
-                      <Avatar className="h-5 w-5 mt-0.5 shrink-0">
-                        <AvatarImage src={entry.actor.avatar} />
-                        <AvatarFallback className="text-[7px]">{initials(entry.actor.name)}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar userId={entry.actor.id} name={entry.actor.name} fallbackAvatar={entry.actor.avatar} className="h-5 w-5 mt-0.5" fallbackClassName="text-[7px]" />
                       <div className="min-w-0">
                         <p>
                           <span className="font-medium">{entry.actor.name}</span>

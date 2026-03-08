@@ -233,10 +233,7 @@ export default function UploadDocument() {
                     )}>
                       {isSelected ? order + 1 : ''}
                     </div>
-                    <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarImage src={a.avatar} />
-                      <AvatarFallback className="text-[10px] font-medium">{a.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar userId={a.id} name={a.name} fallbackAvatar={a.avatar} className="h-8 w-8" fallbackClassName="text-[10px] font-medium" />
                     <div className="flex-1">
                       <p className="text-sm font-medium">{a.name}</p>
                       <p className="text-xs text-muted-foreground">{roleLabels[a.role]}</p>
