@@ -6,7 +6,8 @@ import {
   History, ChevronDown, ChevronUp, Upload, AlertCircle, Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { roleLabels } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import type { Placement, SignatureItem } from '@/lib/mock-data';
 import { useSignatures } from '@/lib/signature-store';
 import { useDocuments } from '@/lib/document-store';

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { FileText, ArrowRight, Clock } from 'lucide-react';
 import type { Document } from '@/lib/mock-data';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { roleLabels } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import StatusBadge from './StatusBadge';
 import UserAvatar from '@/components/UserAvatar';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
