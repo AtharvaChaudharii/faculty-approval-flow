@@ -4,7 +4,8 @@ import {
   LayoutDashboard, Upload, Archive, LogOut, FileText,
   Menu, X, ChevronRight, Bell, UserCircle,
 } from 'lucide-react';
-import { currentUser, roleLabels } from '@/lib/mock-data';
+import { roleLabels } from '@/lib/mock-data';
+import { useCurrentUser } from '@/lib/auth-store';
 import { useDocuments } from '@/lib/document-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
