@@ -10,14 +10,15 @@ import { useDocuments } from '@/lib/document-store';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-const availableApprovers = users.filter(u => u.id !== currentUser.id);
-
 type UploadStep = 'upload' | 'analysis' | 'chain' | 'confirm';
 
 export default function UploadDocument() {
   const navigate = useNavigate();
+  const currentUser = useCurrentUser();
   const { toast } = useToast();
   const { submitDocument } = useDocuments();
+
+  const availableApprovers = users.filter(u => u.id !== currentUser.id);
   const [step, setStep] = useState<UploadStep>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);

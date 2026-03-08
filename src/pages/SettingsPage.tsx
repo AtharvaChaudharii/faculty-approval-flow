@@ -9,6 +9,7 @@ import UserAvatar from '@/components/UserAvatar';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
+  const currentUser = useCurrentUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
