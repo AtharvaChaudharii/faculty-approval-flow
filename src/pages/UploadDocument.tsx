@@ -222,8 +222,17 @@ export default function UploadDocument() {
 
           <div className="institutional-card p-5">
             <h3 className="mb-1">Approval Chain</h3>
-            <p className="text-xs text-muted-foreground mb-4">Select approvers in hierarchical order. Documents will be routed sequentially.</p>
-            <div className="space-y-2">
+            <p className="text-xs text-muted-foreground mb-3">Select approvers in hierarchical order. Documents will be routed sequentially.</p>
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                value={approverSearch}
+                onChange={(e) => setApproverSearch(e.target.value)}
+                placeholder="Search by name or role..."
+                className="w-full rounded-lg border bg-card pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20 placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="space-y-2 max-h-[360px] overflow-y-auto">
               {availableApprovers.map((a) => {
                 const isSelected = selectedApprovers.includes(a.id);
                 const order = selectedApprovers.indexOf(a.id);
