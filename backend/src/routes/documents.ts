@@ -5,6 +5,7 @@ import multer from 'multer';
 import pdfParse from 'pdf-parse';
 import fs from 'fs';
 import path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -81,6 +82,68 @@ router.get('/:id', authMiddleware, async (req: any, res) => {
   }
 });
 
+// POST to analyze document text via AI
+router.post('/analyze', authMiddleware, upload.single('file'), async (req: any, res) => {
+  try {
+    if (req.user.role === 'director') return res.status(403).json({ error: 'Directors are not permitted to upload' });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const pdfBuffer = fs.readFileSync(req.file.path);
+    const data = await pdfParse(pdfBuffer);
+    const fullText = data.text;
+    
+    let title = `Generated Title for ${req.file.originalname}`;
+    let summary = `Auto-generated summary.`;
+
+    try {
+      if (process.env.GEMINI_API_KEY) {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        // Using gemini-1.5-flash as the latest standard fast model matching prompt intent
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `Analyze the following document text and provide:
+1. A concise, professional title (max 60 characters).
+2. A brief summary (2-3 sentences max) of its core message or purpose.
+
+Document Text:
+${fullText.substring(0, 25000)}
+
+Please return the response as a valid JSON object matching this schema:
+{
+  "title": "Document Title",
+  "summary": "Document Summary"
+}`;
+
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        
+        // Strip out any markdown code blocks that the LLM might have used
+        const jsonMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        const rawJsonText = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
+
+        const aiData = JSON.parse(rawJsonText);
+        
+        if (aiData.title) title = aiData.title;
+        if (aiData.summary) summary = aiData.summary;
+      } else {
+        console.warn('GEMINI_API_KEY is missing. Using fallback mock.');
+        title = `AI Generated Title for ${req.file.originalname}`;
+        summary = `AI generated summary reflecting the document content parsing. Based on the preview text: ${fullText.substring(0, 100)}`;
+      }
+    } catch (aiError) {
+      console.error('Failed to generate LLM content, using fallback:', aiError);
+    }
+
+    // Clean up analysis temp file immediately to save disk
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+
+    res.json({ title, summary });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to analyze document' });
+  }
+});
+
 // POST to Upload a new document and start flow
 router.post('/', authMiddleware, upload.single('file'), async (req: any, res) => {
   try {
@@ -92,18 +155,10 @@ router.post('/', authMiddleware, upload.single('file'), async (req: any, res) =>
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
     // Parse chain from JSON body
-    const { category, approvalChainIds } = req.body;
+    const { category, approvalChainIds, title, summary } = req.body;
     const chainIds: string[] = JSON.parse(approvalChainIds || '[]');
 
     if (chainIds.length === 0) return res.status(400).json({ error: 'Approval chain is required' });
-
-    // Mock AI text extraction and summarization
-    const pdfBuffer = fs.readFileSync(req.file.path);
-    const data = await pdfParse(pdfBuffer);
-    const textSample = data.text.substring(0, 100);
-    
-    const title = `AI Geneated Title for ${req.file.originalname}`;
-    const summary = `AI generated summary reflecting the document content parsing. Based on the preview text: ${textSample}`;
 
     const doc = await prisma.document.create({
       data: {

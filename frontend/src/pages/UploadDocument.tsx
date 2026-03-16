@@ -52,7 +52,7 @@ export default function UploadDocument() {
     const f = e.dataTransfer.files[0];
     if (f?.type === 'application/pdf') {
       setFile(f);
-      simulateAnalysis(f.name);
+      simulateAnalysis(f);
     }
   };
 
@@ -60,19 +60,28 @@ export default function UploadDocument() {
     const f = e.target.files?.[0];
     if (f) {
       setFile(f);
-      simulateAnalysis(f.name);
+      simulateAnalysis(f);
     }
   };
 
-  const simulateAnalysis = (fileName: string) => {
+  const simulateAnalysis = async (fileToAnalyze: File) => {
     setStep('analysis');
-    setTimeout(() => {
-      setAiTitle(`AI Generated Title for ${fileName}`);
-      setAiSummary(
-        'This document proposes modifications to the existing data science curriculum, including the addition of two new elective courses focused on applied machine learning and statistical modeling. The proposal includes faculty requirements, lab infrastructure needs, and a phased implementation timeline.'
-      );
+    try {
+      const formData = new FormData();
+      formData.append('file', fileToAnalyze);
+      const res = await fetchWithAuth('/documents/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+      setAiTitle(res.title);
+      setAiSummary(res.summary);
+    } catch (err) {
+      console.error('AI analysis failed:', err);
+      setAiTitle(`Generated Title for ${fileToAnalyze.name}`);
+      setAiSummary('Failed to contact LLM backend.');
+    } finally {
       setStep('chain');
-    }, 2000);
+    }
   };
 
   const toggleApprover = (id: string) => {
@@ -89,6 +98,8 @@ export default function UploadDocument() {
     await submitDocument({
       file,
       category: 'Academic',
+      title: aiTitle,
+      summary: aiSummary,
       approvalChain: approvers.map((a, i) => ({
         approver: a,
         orderIndex: i,

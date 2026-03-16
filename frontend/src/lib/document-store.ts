@@ -99,6 +99,8 @@ export function useDocuments() {
       const formData = new FormData();
       formData.append('file', newDocData.file);
       formData.append('category', newDocData.category);
+      if (newDocData.title) formData.append('title', newDocData.title);
+      if (newDocData.summary) formData.append('summary', newDocData.summary);
       formData.append('approvalChainIds', JSON.stringify(newDocData.approvalChain.map((s:any) => s.approver.id)));
 
       await fetchWithAuth('/documents', {
