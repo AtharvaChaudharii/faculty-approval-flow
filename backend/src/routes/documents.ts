@@ -84,6 +84,11 @@ router.get('/:id', authMiddleware, async (req: any, res) => {
 // POST to Upload a new document and start flow
 router.post('/', authMiddleware, upload.single('file'), async (req: any, res) => {
   try {
+    // Role guard: Director cannot upload documents
+    if (req.user.role === 'director') {
+      return res.status(403).json({ error: 'Directors are not permitted to upload documents' });
+    }
+
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
     // Parse chain from JSON body
