@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+4:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Institutional Color Palette */
+    --background: 210 22% 96.5%;
+    --foreground: 201 20% 23%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 201 20% 23%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 201 20% 23%;
+
+    --primary: 214 52% 24.5%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 18% 90%;
+    --secondary-foreground: 201 20% 23%;
+
+    --muted: 210 14% 93%;
+    --muted-foreground: 210 10% 46%;
+
+    --accent: 210 18% 90%;
+    --accent-foreground: 214 52% 24.5%;
+
+    --destructive: 0 66% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 16% 88%;
+    --input: 210 16% 88%;
+    --ring: 214 52% 24.5%;
+
+    --radius: 0.5rem;
+
+    /* Status Colors */
+    --success: 123 46% 33.5%;
+    --success-foreground: 0 0% 100%;
+    --warning: 27 98% 47%;
+    --warning-foreground: 0 0% 100%;
+    --info: 201 98% 41%;
+    --info-foreground: 0 0% 100%;
+
+    /* Sidebar */
+    --sidebar-background: 214 52% 24.5%;
+    --sidebar-foreground: 210 22% 92%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 214 52% 24.5%;
+    --sidebar-accent: 214 45% 30%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214 40% 32%;
+    --sidebar-ring: 0 0% 100%;
+
+    /* Typography */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-serif: 'Source Serif 4', Georgia, serif;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(214 52% 24.5% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(214 52% 24.5% / 0.08);
+    --shadow-lg: 0 8px 24px -4px hsl(214 52% 24.5% / 0.12);
+    --shadow-card: 0 1px 3px hsl(214 52% 24.5% / 0.06), 0 1px 2px hsl(214 52% 24.5% / 0.04);
+  }
+
+  .dark {
+    --background: 214 30% 8%;
+    --foreground: 210 20% 92%;
+    --card: 214 28% 12%;
+    --card-foreground: 210 20% 92%;
+    --popover: 214 28% 12%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 210 40% 70%;
+    --primary-foreground: 214 30% 8%;
+    --secondary: 214 20% 18%;
+    --secondary-foreground: 210 20% 92%;
+    --muted: 214 20% 16%;
+    --muted-foreground: 210 12% 58%;
+    --accent: 214 20% 18%;
+    --accent-foreground: 210 40% 70%;
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 20%;
+    --input: 214 20% 20%;
+    --ring: 210 40% 70%;
+    --sidebar-background: 214 30% 6%;
+    --sidebar-foreground: 210 20% 80%;
+    --sidebar-primary: 210 40% 70%;
+    --sidebar-primary-foreground: 214 30% 8%;
+    --sidebar-accent: 214 25% 14%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 214 20% 16%;
+    --sidebar-ring: 210 40% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+
+  h1 { @apply text-[32px] font-semibold leading-tight; }
+  h2 { @apply text-2xl font-semibold leading-snug; }
+  h3 { @apply text-lg font-medium leading-snug; }
+  h4 { @apply text-base font-medium; }
+}
+
+@layer components {
+  .status-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-chip-pending {
+    @apply status-chip bg-warning/10 text-warning;
+  }
+
+  .status-chip-approved {
+    @apply status-chip bg-success/10 text-success;
+  }
+
+  .status-chip-rejected {
+    @apply status-chip bg-destructive/10 text-destructive;
+  }
+
+  .status-chip-archived {
+    @apply status-chip bg-info/10 text-info;
+  }
+
+  .institutional-card {
+    @apply bg-card rounded-lg border shadow-[var(--shadow-card)] transition-shadow duration-200 hover:shadow-[var(--shadow-md)];
+  }
+}
