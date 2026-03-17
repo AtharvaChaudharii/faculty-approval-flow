@@ -12,10 +12,10 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const user = loginByEmail(email);
+    const user = await loginByEmail(email);
     if (user) {
       navigate('/');
     } else {

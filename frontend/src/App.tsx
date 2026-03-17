@@ -15,8 +15,15 @@ import { useCurrentUser } from "./lib/auth-store";
 
 const queryClient = new QueryClient();
 
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const user = useCurrentUser();
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function ProtectedUpload() {
   const user = useCurrentUser();
+  if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'director') return <Navigate to="/" replace />;
   return <AppLayout><UploadDocument /></AppLayout>;
 }
@@ -29,11 +36,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+          <Route path="/" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
           <Route path="/upload" element={<ProtectedUpload />} />
-          <Route path="/document/:id" element={<AppLayout><DocumentReview /></AppLayout>} />
-          <Route path="/archive" element={<AppLayout><Archive /></AppLayout>} />
-          <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
+          <Route path="/document/:id" element={<AuthGuard><AppLayout><DocumentReview /></AppLayout></AuthGuard>} />
+          <Route path="/archive" element={<AuthGuard><AppLayout><Archive /></AppLayout></AuthGuard>} />
+          <Route path="/settings" element={<AuthGuard><AppLayout><SettingsPage /></AppLayout></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

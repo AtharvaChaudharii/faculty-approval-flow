@@ -3,93 +3,93 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id               String               @id @default(uuid())
+  id               String            @id @default(uuid())
   name             String
-  email            String               @unique
+  email            String            @unique
   role             String
   department       String
-  avatar           String?              // URL or base64
-  profileImage     String?              // Base64 from frontend localStorage 
-  documents        Document[]           @relation("DocumentSender")
+  avatar           String?
+  profileImage     String?
   approvalSteps    ApprovalStep[]
   auditLogs        AuditEntry[]
+  documents        Document[]        @relation("DocumentSender")
   documentVersions DocumentVersion[]
   signatures       SignatureItem[]
 }
 
 model Document {
-  id              String            @id @default(uuid())
-  title           String
-  summary         String
-  senderId        String
-  sender          User              @relation("DocumentSender", fields: [senderId], references: [id])
-  status          String            // pending, approved, rejected, archived, draft
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  version         Int               @default(1)
-  category        String
-  fileName        String
-  approvalChain   ApprovalStep[]
-  auditLog        AuditEntry[]
-  versionHistory  DocumentVersion[]
+  id             String            @id @default(uuid())
+  title          String
+  summary        String
+  senderId       String
+  status         String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  version        Int               @default(1)
+  category       String
+  fileName       String
+  approvalChain  ApprovalStep[]
+  auditLog       AuditEntry[]
+  sender         User              @relation("DocumentSender", fields: [senderId], references: [id])
+  versionHistory DocumentVersion[]
 }
 
 model ApprovalStep {
-  id            String       @id @default(uuid())
-  documentId    String
-  document      Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  approverId    String
-  approver      User         @relation(fields: [approverId], references: [id])
-  orderIndex    Int
-  status        String       // pending, approved, rejected, waiting
-  actedAt       DateTime?
-  comment       String?
-  placements    Placement[]
+  id         String      @id @default(uuid())
+  documentId String
+  approverId String
+  orderIndex Int
+  status     String
+  actedAt    DateTime?
+  comment    String?
+  approver   User        @relation(fields: [approverId], references: [id])
+  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  placements Placement[]
 }
 
 model AuditEntry {
-  id          String   @id @default(uuid())
-  action      String   // submitted, approved, rejected, revised, archived, reminder_sent
-  actorId     String
-  actor       User     @relation(fields: [actorId], references: [id])
-  documentId  String
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  timestamp   DateTime @default(now())
-  details     String?
-  version     Int?
+  id         String   @id @default(uuid())
+  action     String
+  actorId    String
+  documentId String
+  timestamp  DateTime @default(now())
+  details    String?
+  version    Int?
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  actor      User     @relation(fields: [actorId], references: [id])
 }
 
 model DocumentVersion {
-  id          String   @id @default(uuid())
-  documentId  String
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  version     Int
-  fileName    String
-  uploadedAt  DateTime @default(now())
-  uploadedBy  String
-  uploader    User     @relation(fields: [uploadedBy], references: [id])
+  id         String   @id @default(uuid())
+  documentId String
+  version    Int
+  fileName   String
+  uploadedAt DateTime @default(now())
+  uploadedBy String
+  uploader   User     @relation(fields: [uploadedBy], references: [id])
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
 model SignatureItem {
-  id      String   @id @default(uuid())
+  id      String  @id @default(uuid())
   name    String
-  type    String   // signature, stamp
-  preview String?  // image data
+  type    String
+  preview String?
   userId  String
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Placement {
   id             String       @id @default(uuid())
   approvalStepId String
-  approvalStep   ApprovalStep @relation(fields: [approvalStepId], references: [id], onDelete: Cascade)
   signatureId    String
   x              Float
   y              Float
   pageNumber     Int          @default(1)
+  approvalStep   ApprovalStep @relation(fields: [approvalStepId], references: [id], onDelete: Cascade)
 }

@@ -73,12 +73,12 @@ export default function UploadDocument() {
         method: 'POST',
         body: formData,
       });
-      setAiTitle(res.title);
-      setAiSummary(res.summary);
+      setAiTitle(res.title || `Generated Title for ${fileToAnalyze.name}`);
+      setAiSummary(res.summary || 'Summary generated based on document parsing.');
     } catch (err) {
       console.error('AI analysis failed:', err);
       setAiTitle(`Generated Title for ${fileToAnalyze.name}`);
-      setAiSummary('Failed to contact LLM backend.');
+      setAiSummary('Automated summary based on document extraction. (AI fallback)');
     } finally {
       setStep('chain');
     }

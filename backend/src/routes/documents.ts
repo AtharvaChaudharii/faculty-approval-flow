@@ -36,7 +36,7 @@ const canAccessDocument = async (docId: string, userId: string): Promise<boolean
   });
   if (!doc) return false;
   if (doc.senderId === userId) return true;
-  return doc.approvalChain.some(step => step.approverId === userId);
+  return doc.approvalChain.some((step: any) => step.approverId === userId);
 };
 
 // GET /api/documents (dashboard)
@@ -112,7 +112,15 @@ router.post('/analyze', authMiddleware, memoryUpload.single('file'), async (req:
     let summary = `Auto-generated summary.`;
 
     try {
-      if (process.env.GEMINI_API_KEY) {
+      const isPlaceholderKey = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes('your_gemini_key');
+      
+      if (!process.env.GEMINI_API_KEY || isPlaceholderKey) { // Added explicit check for placeholder key
+        console.warn('GEMINI_API_KEY is missing or is a placeholder. Using fallback mock.');
+        title = `Analysis of ${req.file.originalname}`;
+        // Extract a meaningful snippet for the summary fallback
+        const snippet = fullText.trim().substring(0, 180).replace(/\n/g, ' ') + '...';
+        summary = `Automated extraction summary: ${snippet} (AI Fallback active - Set GEMINI_API_KEY for full analysis)`;
+      } else {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         // Using gemini-1.5-flash as the latest standard fast model matching prompt intent
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -141,10 +149,6 @@ Please return the response as a valid JSON object matching this schema:
         
         if (aiData.title) title = aiData.title;
         if (aiData.summary) summary = aiData.summary;
-      } else {
-        console.warn('GEMINI_API_KEY is missing. Using fallback mock.');
-        title = `AI Generated Title for ${req.file.originalname}`;
-        summary = `AI generated summary reflecting the document content parsing. Based on the preview text: ${fullText.substring(0, 100)}`;
       }
     } catch (aiError) {
       console.error('Failed to generate LLM content, using fallback:', aiError);
@@ -183,7 +187,7 @@ router.post('/', authMiddleware, upload.single('file'), async (req: any, res) =>
         version: 1,
         status: 'pending',
         approvalChain: {
-          create: chainIds.map((approverId, index) => ({
+          create: chainIds.map((approverId: string, index: number) => ({
             approverId,
             orderIndex: index,
             status: index === 0 ? 'pending' : 'waiting'
@@ -231,7 +235,7 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
     if (!doc) return res.status(404).json({ error: 'Document not found' });
 
     // Find the current pending step
-    const currentStepIndex = doc.approvalChain.findIndex(step => step.status === 'pending');
+    const currentStepIndex = doc.approvalChain.findIndex((step: any) => step.status === 'pending');
     if (currentStepIndex === -1) return res.status(400).json({ error: 'Workflow not active' });
 
     const currentStep = doc.approvalChain[currentStepIndex];
@@ -302,7 +306,7 @@ router.post('/:id/reject', authMiddleware, async (req: any, res) => {
 
     if (!doc) return res.status(404).json({ error: 'Document not found' });
 
-    const currentStep = doc.approvalChain.find(step => step.status === 'pending');
+    const currentStep = doc.approvalChain.find((step: any) => step.status === 'pending');
     if (!currentStep || currentStep.approverId !== req.user.id) {
       return res.status(403).json({ error: 'Not your turn to act' });
     }

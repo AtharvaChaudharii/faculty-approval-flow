@@ -2,21 +2,13 @@ import { useSyncExternalStore } from 'react';
 import type { User } from './mock-data';
 import { fetchWithAuth } from './api';
 
-const MOCK_FALLBACK: User = {
-  id: '1',
-  name: 'Dr. Priya Sharma',
-  email: 'priya.sharma@college.edu',
-  role: 'hod',
-  department: 'Computer Science',
-};
-
 // Initial state, let's grab from localStorage if we saved it before
 let currentUser: User | null = (() => {
   try {
     const saved = localStorage.getItem('currentUser');
     if (saved) return JSON.parse(saved);
   } catch (e) {}
-  return MOCK_FALLBACK;
+  return null;
 })();
 
 const listeners = new Set<() => void>();
