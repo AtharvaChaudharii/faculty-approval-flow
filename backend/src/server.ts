@@ -4,8 +4,6 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import docRoutes from './routes/documents';
 import userRoutes from './routes/users';
-import path from 'path';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -16,15 +14,7 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure uploads dir exists
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-
-// Serve static uploaded files
-app.use('/uploads', express.static(uploadsDir));
-
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/documents', docRoutes);

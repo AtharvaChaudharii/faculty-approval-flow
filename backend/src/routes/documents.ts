@@ -3,14 +3,30 @@ import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth';
 import multer from 'multer';
 import pdfParse from 'pdf-parse';
-import fs from 'fs';
-import path from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-const upload = multer({ dest: path.join(__dirname, '../../uploads') });
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'faculty-approval-docs',
+    allowed_formats: ['pdf'],
+  } as any,
+});
+
+const upload = multer({ storage: storage });
+const memoryUpload = multer({ storage: multer.memoryStorage() });
 
 // Helper to check if user should see a document
 const canAccessDocument = async (docId: string, userId: string): Promise<boolean> => {
@@ -83,12 +99,12 @@ router.get('/:id', authMiddleware, async (req: any, res) => {
 });
 
 // POST to analyze document text via AI
-router.post('/analyze', authMiddleware, upload.single('file'), async (req: any, res) => {
+router.post('/analyze', authMiddleware, memoryUpload.single('file'), async (req: any, res) => {
   try {
     if (req.user.role === 'director') return res.status(403).json({ error: 'Directors are not permitted to upload' });
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const pdfBuffer = fs.readFileSync(req.file.path);
+    const pdfBuffer = req.file.buffer;
     const data = await pdfParse(pdfBuffer);
     const fullText = data.text;
     
@@ -134,9 +150,6 @@ Please return the response as a valid JSON object matching this schema:
       console.error('Failed to generate LLM content, using fallback:', aiError);
     }
 
-    // Clean up analysis temp file immediately to save disk
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-
     res.json({ title, summary });
   } catch (error) {
     console.error(error);
@@ -166,7 +179,7 @@ router.post('/', authMiddleware, upload.single('file'), async (req: any, res) =>
         summary,
         senderId: req.user.id,
         category: category || 'General',
-        fileName: req.file.filename,
+        fileName: req.file.path, // Cloudinary URL
         version: 1,
         status: 'pending',
         approvalChain: {
@@ -185,7 +198,7 @@ router.post('/', authMiddleware, upload.single('file'), async (req: any, res) =>
         },
         versionHistory: {
           create: {
-            fileName: req.file.filename,
+            fileName: req.file.path, // Cloudinary URL
             version: 1,
             uploadedBy: req.user.id
           }
