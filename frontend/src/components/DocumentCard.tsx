@@ -18,8 +18,16 @@ export default function DocumentCard({ doc }: { doc: Document }) {
 
   const lastActionDate = doc.audit_log?.length
     ? new Date(doc.audit_log[doc.audit_log.length - 1].timestamp)
-    : new Date(doc.updated_at);
-  const pendingDays = doc.status === 'pending' ? differenceInDays(new Date(), lastActionDate) : 0;
+    : new Date(doc.updated_at || Date.now());
+  
+  const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime());
+  const pendingDays = (doc.status === 'pending' && isValidDate(lastActionDate)) 
+    ? differenceInDays(new Date(), lastActionDate) 
+    : 0;
+  
+  const formattedUpdateDate = isValidDate(new Date(doc.updated_at))
+    ? formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })
+    : 'recently';
 
   return (
     <Link
@@ -74,7 +82,7 @@ export default function DocumentCard({ doc }: { doc: Document }) {
               Pending {pendingDays}d
             </span>
           )}
-          <span>{formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })}</span>
+          <span>{formattedUpdateDate}</span>
         </div>
       </div>
 

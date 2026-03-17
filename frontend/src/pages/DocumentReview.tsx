@@ -77,7 +77,7 @@ export default function DocumentReview() {
 
   // Find active step for "locked" messaging
   const activeStep = doc.approval_chain.find(s => s.status === 'pending');
-  const pendingDays = doc.status === 'pending' && activeStep
+  const pendingDays = (doc.status === 'pending' && activeStep && doc.updated_at)
     ? differenceInDays(new Date(), new Date(doc.updated_at))
     : 0;
 
@@ -169,7 +169,7 @@ export default function DocumentReview() {
               {doc.sender.name}
             </span>
             <span>{doc.category}</span>
-            <span>{format(new Date(doc.created_at), 'MMM d, yyyy')}</span>
+            <span>{doc.created_at ? format(new Date(doc.created_at), 'MMM d, yyyy') : 'Recently'}</span>
             {pendingDays >= 2 && (
               <span className="flex items-center gap-1 text-warning text-xs">
                 <Clock className="h-3 w-3" /> Pending for {pendingDays} days
@@ -270,62 +270,73 @@ export default function DocumentReview() {
         {/* Center - PDF Viewer */}
         <div className="lg:col-span-6">
           <div
-            className={cn('institutional-card aspect-[3/4] flex flex-col items-center justify-center bg-muted/30 relative overflow-hidden select-none',
+            className={cn('institutional-card aspect-[3/4] bg-muted/30 relative overflow-hidden select-none border',
               phase === 'placing' && 'cursor-crosshair ring-2 ring-primary/30'
             )}
-            onClick={handlePdfClick}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           >
-            <FileText className="h-16 w-16 text-muted-foreground/20" />
-            <p className="mt-4 text-sm text-muted-foreground">PDF Viewer</p>
-            <p className="mt-1 text-xs text-muted-foreground/60">{doc.file_name}</p>
+            {/* Real PDF iframe */}
+            <iframe 
+              src={`${doc.file_name}#toolbar=0&navpanes=0`} 
+              className="absolute inset-0 w-full h-full border-none"
+              title="PDF View"
+            />
+
+            {/* Transparent click layer for signature placement - only active when placing or browsing signatures */}
+            <div 
+              className={cn("absolute inset-0 z-10", phase === 'placing' ? 'cursor-crosshair' : 'pointer-events-none')}
+              onClick={handlePdfClick}
+            />
 
             {/* Show existing approval placements from chain (read-only) */}
-            {doc.approval_chain.filter(s => s.placements?.length).map(step =>
-              step.placements!.map(p => (
-                <div key={p.id} className="absolute pointer-events-none" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
-                  <div className="rounded border border-success/50 bg-success/5 px-2 py-1">
-                    <p className="text-[9px] font-semibold text-success whitespace-nowrap">{step.approver.name}</p>
-                    <p className="text-[7px] text-success/60">{roleLabels[step.approver.role]}</p>
+            <div className="absolute inset-0 z-20 pointer-events-none">
+              {doc.approval_chain.filter(s => s.placements?.length).map(step =>
+                step.placements!.map(p => (
+                  <div key={p.id} className="absolute" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
+                    <div className="rounded border border-success/50 bg-success/5 px-2 py-1">
+                      <p className="text-[9px] font-semibold text-success whitespace-nowrap">{step.approver.name}</p>
+                      <p className="text-[7px] text-success/60">{roleLabels[step.approver.role]}</p>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
 
-            {/* Current placement (active) */}
-            {placements.map((p) => {
-              const sig = getSignatureById(p.signatureId);
-              return (
-                <div
-                  key={p.id}
-                  className="absolute group cursor-grab active:cursor-grabbing"
-                  style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}
-                  onMouseDown={(e) => handleMouseDown(e, p.id)}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="rounded border-2 border-dashed border-primary/50 bg-primary/5 px-3 py-1.5 relative">
-                    {sig?.preview ? (
-                      <img src={sig.preview} alt={sig.name} className="h-8 w-auto max-w-[80px] object-contain" />
-                    ) : (
-                      <>
-                        <p className="text-[10px] font-semibold text-primary whitespace-nowrap">{currentUser.name}</p>
-                        <p className="text-[8px] text-primary/60">{sig?.type === 'stamp' ? 'STAMP' : roleLabels[currentUser.role]}</p>
-                      </>
-                    )}
-                    <button
-                      className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => { e.stopPropagation(); removePlacement(p.id); }}
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                    <GripVertical className="absolute -left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+              {/* Current placement (active) */}
+              {placements.map((p) => {
+                const sig = getSignatureById(p.signatureId);
+                return (
+                  <div
+                    key={p.id}
+                    className="absolute group cursor-grab active:cursor-grabbing pointer-events-auto"
+                    style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}
+                    onMouseDown={(e) => handleMouseDown(e, p.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="rounded border-2 border-dashed border-primary/50 bg-primary/5 px-3 py-1.5 relative">
+                      {sig?.preview ? (
+                        <img src={sig.preview} alt={sig.name} className="h-8 w-auto max-w-[80px] object-contain" />
+                      ) : (
+                        <>
+                          <p className="text-[10px] font-semibold text-primary whitespace-nowrap">{currentUser.name}</p>
+                          <p className="text-[8px] text-primary/60">{sig?.type === 'stamp' ? 'STAMP' : roleLabels[currentUser.role]}</p>
+                        </>
+                      )}
+                      <button
+                        className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); removePlacement(p.id); }}
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                      <GripVertical className="absolute -left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
+          <p className="text-[10px] text-muted-foreground mt-2 text-center truncate">Source: {doc.file_name}</p>
         </div>
 
         {/* Right - Actions */}
@@ -388,15 +399,31 @@ export default function DocumentReview() {
             </div>
           )}
 
-          {/* Details */}
           <div className="institutional-card p-5">
             <h4 className="text-sm font-medium mb-3">Details</h4>
-            <dl className="space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Category</dt><dd>{doc.category}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Version</dt><dd>v{doc.version}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Submitted</dt><dd>{format(new Date(doc.created_at), 'MMM d, yyyy')}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Last Updated</dt><dd>{format(new Date(doc.updated_at), 'MMM d, yyyy')}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">File</dt><dd className="text-xs truncate max-w-[120px]">{doc.file_name}</dd></div>
+            <dl className="space-y-2.5 text-sm">
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground shrink-0">Category</dt>
+                <dd className="text-right font-medium">{doc.category}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground shrink-0">Version</dt>
+                <dd className="text-right font-medium">v{doc.version}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground shrink-0">Submitted</dt>
+                <dd className="text-right font-medium">{doc.created_at ? format(new Date(doc.created_at), 'MMM d, yyyy') : 'Recently'}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground shrink-0">Last Updated</dt>
+                <dd className="text-right font-medium">{doc.updated_at ? format(new Date(doc.updated_at), 'MMM d, yyyy') : 'Recently'}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground shrink-0">File</dt>
+                <dd className="text-right text-xs truncate max-w-[140px] text-primary hover:underline">
+                  <a href={doc.file_name} target="_blank" rel="noopener noreferrer">View Original</a>
+                </dd>
+              </div>
             </dl>
           </div>
 

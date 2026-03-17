@@ -29,22 +29,24 @@ export async function refreshDocuments() {
     documents = data.map((d: any) => ({
       ...d,
       sender: d.sender,
-      approval_chain: d.approvalChain.map((step: any) => ({
+      created_at: d.createdAt || d.created_at,
+      updated_at: d.updatedAt || d.updated_at,
+      approval_chain: (d.approvalChain || d.approval_chain || []).map((step: any) => ({
          ...step,
          approver: step.approver,
-         order_index: step.orderIndex,
-         acted_at: step.actedAt,
+         order_index: step.orderIndex ?? step.order_index,
+         acted_at: step.actedAt ?? step.acted_at,
       })),
-      audit_log: d.auditLog.map((audit: any) => ({
+      audit_log: (d.auditLog || d.audit_log || []).map((audit: any) => ({
          ...audit,
          actor: audit.actor
       })),
-      version_history: d.versionHistory?.map((ver: any) => ({
+      version_history: (d.versionHistory || d.version_history || [])?.map((ver: any) => ({
          ...ver,
-         file_name: ver.fileName,
-         uploaded_at: ver.uploadedAt
+         file_name: ver.fileName ?? ver.file_name,
+         uploaded_at: ver.uploadedAt ?? ver.uploaded_at
       })) || [],
-      file_name: d.fileName
+      file_name: d.fileName ?? d.file_name
     }));
     isLoaded = true;
     notify();

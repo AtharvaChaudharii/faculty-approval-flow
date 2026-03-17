@@ -102,14 +102,27 @@ router.get('/:id', authMiddleware, async (req: any, res) => {
 router.post('/analyze', authMiddleware, memoryUpload.single('file'), async (req: any, res) => {
   try {
     if (req.user.role === 'director') return res.status(403).json({ error: 'Directors are not permitted to upload' });
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    console.log(`[Analyze] Received file: ${req.file.originalname}, size: ${req.file.size} bytes`);
 
     const pdfBuffer = req.file.buffer;
-    const data = await pdfParse(pdfBuffer);
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      console.error('[Analyze] Empty file buffer');
+      return res.status(400).json({ error: 'File buffer is empty' });
+    }
+
+    let data;
+    try {
+      data = await pdfParse(pdfBuffer);
+    } catch (parseError) {
+      console.error('[Analyze] PDF Parse Error:', parseError);
+      return res.status(400).json({ error: 'Could not parse PDF content' });
+    }
+
     const fullText = data.text;
+    console.log(`[Analyze] Parsed text length: ${fullText.length} chars`);
     
-    let title = `Generated Title for ${req.file.originalname}`;
-    let summary = `Auto-generated summary.`;
+    let title = `Analysis of ${req.file.originalname}`;
+    let summary = `Automated summary of ${req.file.originalname}.`;
 
     try {
       const isPlaceholderKey = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes('your_gemini_key');
