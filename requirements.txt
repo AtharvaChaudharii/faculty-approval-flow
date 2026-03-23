@@ -1,0 +1,506 @@
+================================================================================
+       NOTICE APPROVAL MANAGEMENT PLATFORM — REQUIREMENTS DOCUMENT
+================================================================================
+  Project: Faculty Approval Flow
+  Stack:   React 18 + Vite (Frontend) | Express + TypeScript (Backend)
+           PostgreSQL (Neon) | Prisma ORM | Cloudinary | Google Gemini AI
+  Date:    2026-03-23
+================================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SECTION 1: FEATURES — IMPLEMENTATION STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Legend:
+  [DONE]        — Fully implemented and functional
+  [PARTIAL]     — Partially implemented; gaps noted
+  [NOT STARTED] — Planned but not yet implemented
+
+
+--------------------------------------------------------------------------------
+1. AUTHENTICATION & AUTHORIZATION
+--------------------------------------------------------------------------------
+
+[DONE] Email-only login (no password)
+       - Backend: POST /api/auth/login returns JWT (7-day expiry)
+       - Frontend: auth-store.ts with useSyncExternalStore pattern
+       - Token persisted in localStorage
+
+[DONE] Session validation
+       - Backend: GET /api/auth/me validates token
+       - Frontend: checkSession() runs on app startup
+
+[DONE] Role-based access control
+       - Roles: faculty, assistant_professor, hod, principal, director
+       - Director blocked from uploading documents (frontend + backend)
+       - "Submitted by Me" filter hidden for directors
+       - Upload nav item hidden for directors
+
+[DONE] Demo login support
+       - 6 seeded users with different roles for testing
+       - Login page has demo user buttons
+
+[DONE] Password-based authentication
+       - bcryptjs hashing (10 salt rounds) on login
+       - Password field added to User model (schema + DB migrated)
+       - Backend validates password, returns 401 on mismatch
+       - Password hash excluded from all API responses
+       - Frontend sends password on login, demo buttons autofill "password123"
+       - Seed users all have default password: password123
+
+[NOT STARTED] Admin role / System Admin panel
+              - Planned for managing users, roles, hierarchy rules, analytics
+
+
+--------------------------------------------------------------------------------
+2. DOCUMENT UPLOAD & MANAGEMENT
+--------------------------------------------------------------------------------
+
+[DONE] PDF file upload
+       - Multer middleware for file handling
+       - Cloudinary storage for persistent PDF hosting
+       - PDF-only file type enforcement
+
+[DONE] AI-powered document analysis
+       - PDF text extraction via pdf-parse
+       - Google Gemini (gemini-2.0-flash-lite) generates title + summary
+       - Graceful fallback to text snippet if API key missing
+       - Backend: POST /api/documents/analyze
+
+[DONE] Multi-step upload wizard (Frontend)
+       - Step 1: Drag-and-drop or file picker for PDF
+       - Step 2: AI analysis (title & summary generation)
+       - Step 3: Approval chain selection
+       - Step 4: Confirmation and submission
+
+[DONE] Document metadata storage
+       - Title, summary, category, version, status, timestamps
+       - Sender reference, file URL
+
+[DONE] Document listing & filtering
+       - Backend: GET /api/documents (user-scoped)
+       - Frontend: Dashboard with filters (All, Action Required,
+         Submitted by Me, Pending, Approved, Rejected)
+       - Search by title or sender name
+
+[DONE] Document detail view
+       - Embedded PDF viewer (iframe)
+       - AI-generated summary panel
+       - Metadata display (category, version, dates)
+       - Approval chain visualization with status badges
+
+
+--------------------------------------------------------------------------------
+3. APPROVAL WORKFLOW
+--------------------------------------------------------------------------------
+
+[DONE] Sequential approval chain
+       - Ordered approver selection during upload
+       - ApprovalStep model with orderIndex
+       - Step statuses: pending → approved/rejected, waiting → pending
+
+[DONE] Chain validation
+       - Prevents sender from being in own approval chain
+       - Prevents duplicate approvers
+       - Hierarchical approver list with search/filter
+
+[DONE] Approval action
+       - Backend: POST /api/documents/:id/approve
+       - Only current pending approver can approve
+       - Advances chain to next approver or marks document approved
+       - Creates audit log entry
+
+[DONE] Rejection action
+       - Backend: POST /api/documents/:id/reject
+       - Accepts rejection comment
+       - Marks step and document as rejected
+       - AI-generated rejection email via Gemini
+
+[DONE] Revision workflow (Frontend)
+       - Rejected documents show "Revise" option
+       - Restarts approval chain from first approver
+       - Version number incremented
+
+[DONE] Approval chain visualization
+       - Color-coded status indicators per step
+       - Approver avatars with order badges
+       - Timestamps and rejection comments displayed
+       - Current user highlighted
+
+
+--------------------------------------------------------------------------------
+4. DIGITAL SIGNATURES
+--------------------------------------------------------------------------------
+
+[DONE] Signature & stamp gallery
+       - Upload signature/stamp images in Settings page
+       - In-memory signature store with default signatures
+       - Add/remove operations
+
+[DONE] Signature placement on PDF
+       - Click-to-place on document during approval
+       - Drag-and-drop repositioning
+       - X/Y coordinates + page number stored
+       - Visual preview with delete option
+
+[DONE] Placement persistence
+       - Placement model stores coordinates per approval step
+       - Linked to specific signature items
+
+[DONE] Final PDF merge with signatures
+       - Backend: GET /api/documents/:id/signed-pdf endpoint
+       - Uses pdf-lib to overlay approver name, role, and date at
+         stored x/y coordinates on each page
+       - Original file remains untouched (signatures rendered on-demand)
+       - Download button shows "Download Signed PDF" for approved docs
+
+
+--------------------------------------------------------------------------------
+5. EMAIL NOTIFICATIONS
+--------------------------------------------------------------------------------
+
+[DONE] Step advance email
+       - Sent to next approver when their turn comes
+
+[DONE] Fully approved email
+       - Sent to sender when all approvers have approved
+
+[DONE] Rejection email
+       - AI-generated professional rejection body via Gemini
+       - Includes approver's rejection comment
+       - Sent to sender
+
+[DONE] Reminder email
+       - Sent to stalled approvers (idle 48+ hours)
+
+[DONE] Email infrastructure
+       - Nodemailer with SMTP support
+       - Ethereal fallback for development
+       - Configurable via environment variables
+
+
+--------------------------------------------------------------------------------
+6. AUTOMATED REMINDERS (CRON)
+--------------------------------------------------------------------------------
+
+[DONE] Hourly cron job
+       - Checks for pending approval steps idle 48+ hours
+       - Sends reminder email to approver
+       - Prevents spam (max one reminder per 48-hour window)
+       - Updates lastReminder timestamp on approval step
+       - Creates audit log entry for reminder_sent
+
+
+--------------------------------------------------------------------------------
+7. AUDIT LOGGING
+--------------------------------------------------------------------------------
+
+[DONE] Comprehensive audit trail
+       - Actions tracked: submitted, approved, rejected, reminder_sent
+       - Records actor, action, timestamp, details, version
+       - AuditEntry model in database
+       - Displayed in document detail view (frontend)
+
+[PARTIAL] Audit log display
+          - Frontend shows audit entries in document review page
+          - Collapsible timeline with actor, timestamp, and details
+          - Missing: Dedicated admin audit log viewer
+
+
+--------------------------------------------------------------------------------
+8. VERSION HISTORY
+--------------------------------------------------------------------------------
+
+[DONE] Document versioning
+       - DocumentVersion model tracks file versions
+       - Version number incremented on revision
+       - Upload timestamp and uploader recorded
+
+[DONE] Version history display
+       - Collapsible timeline in document detail view
+       - Shows version number, upload date, uploader
+
+
+--------------------------------------------------------------------------------
+9. ARCHIVE
+--------------------------------------------------------------------------------
+
+[DONE] Archive page (Frontend)
+       - Filter by category: All, Academic, Financial,
+         Administrative, Procurement
+       - Dual view modes: Grid and List
+       - Search functionality
+       - Color-coded approval progress bars
+
+[DONE] Archive access control
+       - Frontend filters approved/rejected documents
+       - Read-only display after approval/rejection
+       - Backend guards on approve/reject endpoints reject actions
+         on documents with status "approved" or "rejected"
+
+
+--------------------------------------------------------------------------------
+10. USER PROFILE & SETTINGS
+--------------------------------------------------------------------------------
+
+[DONE] Profile display
+       - Name, email, role, department shown in Settings page
+       - Sidebar user card with avatar
+
+[DONE] Profile photo upload
+       - Base64 image stored in localStorage (frontend)
+       - Backend endpoint: PUT /api/users/me/profile-photo
+       - Hover camera icon overlay on avatar
+
+[DONE] User avatar system
+       - UserAvatar component with fallback initials
+       - Profile photo overrides from localStorage
+       - Consistent display across sidebar, cards, approval chain
+
+
+--------------------------------------------------------------------------------
+11. UI/UX & DESIGN SYSTEM
+--------------------------------------------------------------------------------
+
+[DONE] Component library
+       - 50+ shadcn/ui components (Radix UI based)
+       - Custom components: DocumentCard, StatsCard, StatusBadge,
+         UserAvatar, NavLink
+
+[DONE] Responsive layout
+       - Collapsible sidebar (mobile-friendly)
+       - Grid layouts adapt (2-col to 4-col)
+       - Touch-friendly sizing
+
+[DONE] Theming & colors
+       - Tailwind CSS with custom color palette
+       - CSS variables for semantic colors
+       - Dark mode support (next-themes installed)
+
+[DONE] Animations
+       - fade-in, slide-in-right keyframes
+       - 150-300ms transitions
+
+[DONE] Notifications UI
+       - Bell icon with pending count badge
+       - Dropdown showing documents awaiting action
+
+
+--------------------------------------------------------------------------------
+12. DASHBOARD
+--------------------------------------------------------------------------------
+
+[DONE] Stats overview
+       - 4 cards: Action Required, Pending, Approved, Rejected
+
+[DONE] Document grid
+       - Cards with progress bars, status badges, timestamps
+       - Summary preview
+
+[DONE] Filtering & search
+       - Tab filters by status
+       - Text search by title/sender
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SECTION 2: FEATURES NOT YET IMPLEMENTED (FROM PRD / IMPLEMENTATION PLAN)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+--------------------------------------------------------------------------------
+A. CRITICAL / MVP GAPS
+--------------------------------------------------------------------------------
+
+1. [DONE] Final Signed PDF Generation (Phase 9)
+   - GET /api/documents/:id/signed-pdf endpoint implemented
+   - Overlays approver name, role, and date at stored coordinates using pdf-lib
+   - Streams merged PDF to user for download
+   - Original file remains immutable
+
+2. [DONE] Password-Based Authentication
+   - bcryptjs hashing with 10 salt rounds
+   - Password field in User model, validated on login
+   - Hash excluded from all API responses
+
+3. [DONE] Backend Archive Immutability Enforcement
+   - Approve/reject endpoints reject actions on finalized documents
+   - Returns 400 with clear error message
+
+
+--------------------------------------------------------------------------------
+B. V1 ENHANCEMENTS (PLANNED)
+--------------------------------------------------------------------------------
+
+4. [NOT STARTED] Admin Settings Panel
+   - Manage user roles and accounts
+   - Define hierarchy rules
+   - Configure reminder intervals
+   - View system-wide analytics
+   Priority: MEDIUM
+
+5. [NOT STARTED] Analytics Dashboard
+   - Average approval time metrics
+   - Bottleneck identification
+   - Department-level statistics
+   - Approval rate tracking
+   Priority: MEDIUM
+
+6. [NOT STARTED] Advanced Dashboard Filters
+   - Date range filtering
+   - Department-level grouping
+   - Priority/urgency indicators
+   Priority: LOW
+
+7. [NOT STARTED] Strict Role-Based Hierarchy Enforcement
+   - Backend enforcement that approval chains follow
+     institutional hierarchy (e.g., Faculty → HOD → Principal → Director)
+   - Currently any user can be placed in any order
+   Priority: MEDIUM
+
+
+--------------------------------------------------------------------------------
+C. V2 ENHANCEMENTS (FUTURE)
+--------------------------------------------------------------------------------
+
+8. [NOT STARTED] Mobile-Optimized Interface
+   - Dedicated mobile views
+   - Touch-optimized signature placement
+   - Push notifications
+   Priority: LOW
+
+9. [NOT STARTED] Bulk Document Approval
+   - Approve multiple documents at once
+   - Batch signature placement
+   Priority: LOW
+
+10. [NOT STARTED] External Reviewer Access
+    - Invite external academic reviewers
+    - Temporary access tokens
+    - Limited permissions
+    Priority: LOW
+
+11. [NOT STARTED] College ERP Integration
+    - Integration with existing institutional systems
+    - Data synchronization
+    Priority: LOW
+
+
+--------------------------------------------------------------------------------
+D. SECURITY ENHANCEMENTS (FUTURE)
+--------------------------------------------------------------------------------
+
+12. [NOT STARTED] IP Logging
+    - Track login and action IP addresses
+    Priority: LOW
+
+13. [NOT STARTED] Digital Certificate Validation
+    - Certificate-based signing for legal enforceability
+    Priority: LOW
+
+14. [NOT STARTED] Hash Verification of Original File
+    - SHA-256 hash stored on upload
+    - Integrity verification on download
+    Priority: LOW
+
+15. [NOT STARTED] Blockchain-Based Document Hash Storage
+    - Immutable proof of document existence and integrity
+    Priority: LOW
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SECTION 3: TECHNICAL IMPLEMENTATION SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+--------------------------------------------------------------------------------
+BACKEND API ENDPOINTS (ALL IMPLEMENTED)
+--------------------------------------------------------------------------------
+
+  Auth:
+    POST   /api/auth/login          — Email login, returns JWT
+    GET    /api/auth/me             — Validate session, return user
+
+  Documents:
+    GET    /api/documents           — List user's documents
+    GET    /api/documents/:id       — Get document details
+    POST   /api/documents           — Upload PDF + create approval chain
+    POST   /api/documents/analyze   — AI analysis of uploaded PDF
+    POST   /api/documents/:id/approve — Approve with signature placements
+    POST   /api/documents/:id/reject  — Reject with comment
+    GET    /api/documents/:id/pdf     — Proxy original PDF (inline display)
+    GET    /api/documents/:id/signed-pdf — Download PDF with signature overlays
+
+  Users:
+    GET    /api/users               — List all users (for chain selection)
+    PUT    /api/users/me/profile-photo — Update profile photo
+
+  System:
+    GET    /health                  — Health check
+
+
+--------------------------------------------------------------------------------
+DATABASE MODELS (ALL IMPLEMENTED)
+--------------------------------------------------------------------------------
+
+  User             — id, name, email, role, department, avatar, profileImage
+  Document         — id, title, summary, status, senderId, category,
+                     fileName, version, timestamps
+  ApprovalStep     — id, documentId, approverId, orderIndex, status,
+                     actedAt, comment, lastReminder
+  AuditEntry       — id, action, actorId, documentId, timestamp,
+                     details, version
+  DocumentVersion  — id, documentId, version, fileName, uploadedAt,
+                     uploadedBy
+  SignatureItem    — id, name, type, preview, userId
+  Placement        — id, approvalStepId, signatureId, x, y, pageNumber
+
+
+--------------------------------------------------------------------------------
+FRONTEND PAGES & ROUTES (ALL IMPLEMENTED)
+--------------------------------------------------------------------------------
+
+  /login           — Email login with demo user buttons
+  /                — Dashboard (stats, filters, document grid)
+  /upload          — Multi-step document upload wizard (blocked for directors)
+  /document/:id    — Document review, approval, rejection, signature placement
+  /archive         — Completed documents (grid/list view, category filter)
+  /settings        — Profile, photo upload, signature gallery
+  *                — 404 Not Found
+
+
+--------------------------------------------------------------------------------
+KEY DEPENDENCIES
+--------------------------------------------------------------------------------
+
+  Backend:
+    express 5.2, prisma 6.19, jsonwebtoken 9.0, bcryptjs 3.0,
+    multer 2.1, cloudinary 1.41, nodemailer 8.0, node-cron 4.2,
+    @google/generative-ai 0.24, pdf-parse 1.1, tsx 4.21
+
+  Frontend:
+    react 18.3, react-router-dom 6.30, @tanstack/react-query 5.83,
+    tailwindcss 3.4, react-hook-form 7.61, zod 3.25,
+    date-fns 3.6, lucide-react, shadcn/ui (radix-ui), vite 5.4
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SECTION 4: IMPLEMENTATION PHASE TRACKER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Phase 1:  Foundation Setup                  [DONE]
+  Phase 2:  Document Upload Flow              [DONE]
+  Phase 3:  Approval Chain Builder            [DONE]
+  Phase 4:  Review Interface                  [DONE]
+  Phase 5:  Signature System                  [DONE]
+  Phase 6:  Rejection Flow                    [DONE]
+  Phase 7:  Revision System                   [DONE]
+  Phase 8:  Reminder Automation               [DONE]
+  Phase 9:  Final PDF Merge                   [DONE]
+  Phase 10: Archive & Permissions             [DONE]
+  Phase 11: Profile Photo & Avatar System     [DONE]
+
+
+================================================================================
+  END OF REQUIREMENTS DOCUMENT
+================================================================================

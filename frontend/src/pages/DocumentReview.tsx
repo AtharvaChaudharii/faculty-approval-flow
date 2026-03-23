@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useRef } from 'react';
+import { API_URL } from '@/lib/api';
 import {
   ArrowLeft, FileText, Check, X, Clock, CheckCircle2, XCircle,
   Sparkles, Download, Pen, Move, GripVertical, Image as ImageIcon,
@@ -95,6 +96,7 @@ export default function DocumentReview() {
       id: `p-${Date.now()}`,
       signatureId: selectedSig.id,
       x, y,
+      pageNumber: 1,
     }]);
     setPhase('placed');
     setSelectedSig(null);
@@ -121,7 +123,12 @@ export default function DocumentReview() {
   const removePlacement = (pId: string) => setPlacements(prev => prev.filter(p => p.id !== pId));
 
   const handleConfirmSign = () => {
-    approveDocument(doc.id, placements);
+    // Attach the actual signature image (base64) to each placement so the backend can embed it in the signed PDF
+    const placementsWithImages = placements.map(p => {
+      const sig = getSignatureById(p.signatureId);
+      return { ...p, signatureImage: sig?.preview || null };
+    });
+    approveDocument(doc.id, placementsWithImages);
     setPlacements([]);
     setPhase('idle');
     toast({ title: 'Document approved successfully.' });
@@ -177,8 +184,15 @@ export default function DocumentReview() {
             )}
           </div>
         </div>
-        <Button variant="outline" size="sm">
-          <Download className="h-4 w-4 mr-1.5" /> Download PDF
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href={`${API_URL}/documents/${doc.id}/${doc.status === 'approved' ? 'signed-pdf' : 'pdf'}?token=${encodeURIComponent(localStorage.getItem('token') || '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+          >
+            <Download className="h-4 w-4 mr-1.5" /> {doc.status === 'approved' ? 'Download Signed PDF' : 'Download PDF'}
+          </a>
         </Button>
       </div>
 
@@ -277,9 +291,9 @@ export default function DocumentReview() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           >
-            {/* Real PDF iframe */}
-            <iframe 
-              src={`${doc.file_name}#toolbar=0&navpanes=0`} 
+            {/* PDF iframe via backend proxy to avoid Cloudinary CORS/download headers */}
+            <iframe
+              src={`${API_URL}/documents/${doc.id}/pdf?token=${encodeURIComponent(localStorage.getItem('token') || '')}#toolbar=0&navpanes=0`}
               className="absolute inset-0 w-full h-full border-none"
               title="PDF View"
             />

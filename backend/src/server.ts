@@ -1,11 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+dotenv.config();
+
 import authRoutes from './routes/auth';
 import docRoutes from './routes/documents';
 import userRoutes from './routes/users';
-
-dotenv.config();
+import { startReminderCron } from './lib/cron';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -25,4 +26,5 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Backend is running on http://localhost:${PORT}`);
+  startReminderCron();
 });

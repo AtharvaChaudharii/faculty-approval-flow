@@ -93,6 +93,18 @@ export default function UploadDocument() {
   const handleSubmit = async () => {
     if (!file || selectedApprovers.length === 0) return;
 
+    // Safety: sender cannot approve own doc
+    if (selectedApprovers.includes(currentUser.id)) {
+      toast({ title: 'Invalid chain', description: 'You cannot approve your own document.', variant: 'destructive' });
+      return;
+    }
+
+    // Safety: no duplicates
+    if (new Set(selectedApprovers).size !== selectedApprovers.length) {
+      toast({ title: 'Invalid chain', description: 'Duplicate approvers are not allowed.', variant: 'destructive' });
+      return;
+    }
+
     const approvers = selectedApprovers.map(id => availableApprovers.find(u => u.id === id)!);
 
     await submitDocument({

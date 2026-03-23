@@ -26,11 +26,11 @@ function subscribe(cb: () => void) {
   return () => { listeners.delete(cb); };
 }
 
-export async function loginByEmail(email: string): Promise<User | null> {
+export async function loginByEmail(email: string, password: string): Promise<User | null> {
   try {
     const res = await fetchWithAuth('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, password })
     });
     
     // Store token

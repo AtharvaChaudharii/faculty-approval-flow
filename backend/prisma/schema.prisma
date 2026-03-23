@@ -11,6 +11,7 @@ model User {
   id               String            @id @default(uuid())
   name             String
   email            String            @unique
+  password         String            @default("")
   role             String
   department       String
   avatar           String?
@@ -40,16 +41,17 @@ model Document {
 }
 
 model ApprovalStep {
-  id         String      @id @default(uuid())
-  documentId String
-  approverId String
-  orderIndex Int
-  status     String
-  actedAt    DateTime?
-  comment    String?
-  approver   User        @relation(fields: [approverId], references: [id])
-  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  placements Placement[]
+  id           String      @id @default(uuid())
+  documentId   String
+  approverId   String
+  orderIndex   Int
+  status       String
+  actedAt      DateTime?
+  comment      String?
+  lastReminder DateTime?
+  approver     User        @relation(fields: [approverId], references: [id])
+  document     Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  placements   Placement[]
 }
 
 model AuditEntry {
@@ -88,6 +90,7 @@ model Placement {
   id             String       @id @default(uuid())
   approvalStepId String
   signatureId    String
+  signatureImage String?      // base64 data URL of the actual signature/stamp image
   x              Float
   y              Float
   pageNumber     Int          @default(1)

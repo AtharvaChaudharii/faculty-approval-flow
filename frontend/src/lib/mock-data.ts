@@ -65,6 +65,7 @@ export interface Placement {
   signatureId: string;
   x: number;
   y: number;
+  pageNumber?: number;
 }
 
 export const defaultSignatures: SignatureItem[] = [

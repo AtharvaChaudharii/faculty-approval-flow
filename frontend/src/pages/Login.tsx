@@ -15,11 +15,15 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const user = await loginByEmail(email);
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+    const user = await loginByEmail(email, password);
     if (user) {
       navigate('/');
     } else {
-      setError('No account found with this email. Try one of the demo accounts below.');
+      setError('Invalid email or password. Try one of the demo accounts below (password: password123).');
     }
   };
 
@@ -111,7 +115,7 @@ export default function Login() {
               {users.map((u) => (
                 <button
                   key={u.id}
-                  onClick={() => { setEmail(u.email); setError(''); }}
+                  onClick={() => { setEmail(u.email); setPassword('password123'); setError(''); }}
                   className="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">

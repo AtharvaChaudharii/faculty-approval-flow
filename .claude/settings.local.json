@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(npx prisma:*)",
+      "Bash(timeout 8 npx tsx src/server.ts)"
+    ]
+  }
+}
