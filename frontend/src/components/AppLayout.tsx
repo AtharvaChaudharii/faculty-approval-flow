@@ -139,7 +139,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               {notificationsOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 z-50 w-80 rounded-lg border bg-card shadow-elevated animate-fade-in">
+                  <div className="absolute right-0 top-full mt-2 z-50 w-[calc(100vw-2rem)] sm:w-80 max-w-80 rounded-lg border bg-card shadow-elevated animate-fade-in">
                     <div className="flex items-center justify-between border-b px-4 py-3">
                       <h4 className="text-sm font-medium">Notifications</h4>
                       {pendingForUser.length > 0 && (
@@ -184,7 +184,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

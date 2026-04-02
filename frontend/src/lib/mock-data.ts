@@ -63,6 +63,7 @@ export interface SignatureItem {
 export interface Placement {
   id: string;
   signatureId: string;
+  signatureImage?: string;
   x: number;
   y: number;
   pageNumber?: number;

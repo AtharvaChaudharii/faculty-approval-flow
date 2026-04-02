@@ -13,6 +13,18 @@ import { fetchWithAuth } from '@/lib/api';
 
 type UploadStep = 'upload' | 'analysis' | 'chain' | 'confirm';
 
+const ROLE_HIERARCHY: Record<string, number> = {
+  faculty: 0,
+  assistant_professor: 1,
+  hod: 2,
+  principal: 3,
+  director: 4,
+};
+
+function getRoleRank(role: string): number {
+  return ROLE_HIERARCHY[role] ?? 0;
+}
+
 export default function UploadDocument() {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
@@ -27,6 +39,8 @@ export default function UploadDocument() {
   const [approverSearch, setApproverSearch] = useState('');
   const [aiTitle, setAiTitle] = useState('');
   const [aiSummary, setAiSummary] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Academic');
 
   useEffect(() => {
     fetchWithAuth('/users')
@@ -39,11 +53,15 @@ export default function UploadDocument() {
   }, [currentUser.id]);
 
   const filteredApprovers = useMemo(() => {
-    if (!approverSearch.trim()) return availableApprovers;
-    const q = approverSearch.toLowerCase();
-    return availableApprovers.filter(a =>
-      a.name.toLowerCase().includes(q) || roleLabels[a.role as UserRole]?.toLowerCase().includes(q)
-    );
+    let list = availableApprovers;
+    if (approverSearch.trim()) {
+      const q = approverSearch.toLowerCase();
+      list = list.filter(a =>
+        a.name.toLowerCase().includes(q) || roleLabels[a.role as UserRole]?.toLowerCase().includes(q)
+      );
+    }
+    // Sort by hierarchy rank
+    return [...list].sort((a, b) => getRoleRank(a.role) - getRoleRank(b.role));
   }, [approverSearch, availableApprovers]);
 
   const handleDrop = (e: React.DragEvent) => {
@@ -85,13 +103,20 @@ export default function UploadDocument() {
   };
 
   const toggleApprover = (id: string) => {
-    setSelectedApprovers(prev =>
-      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
-    );
+    setSelectedApprovers(prev => {
+      if (prev.includes(id)) return prev.filter(a => a !== id);
+      // Auto-sort by hierarchy when adding
+      const next = [...prev, id];
+      return next.sort((a, b) => {
+        const userA = availableApprovers.find(u => u.id === a);
+        const userB = availableApprovers.find(u => u.id === b);
+        return getRoleRank(userA?.role || '') - getRoleRank(userB?.role || '');
+      });
+    });
   };
 
   const handleSubmit = async () => {
-    if (!file || selectedApprovers.length === 0) return;
+    if (!file || selectedApprovers.length === 0 || isSubmitting) return;
 
     // Safety: sender cannot approve own doc
     if (selectedApprovers.includes(currentUser.id)) {
@@ -105,19 +130,26 @@ export default function UploadDocument() {
       return;
     }
 
-    const approvers = selectedApprovers.map(id => availableApprovers.find(u => u.id === id)!);
+    setIsSubmitting(true);
+    try {
+      const approvers = selectedApprovers.map(id => availableApprovers.find(u => u.id === id)!);
 
-    await submitDocument({
-      file,
-      category: 'Academic',
-      title: aiTitle,
-      summary: aiSummary,
-      approvalChain: approvers.map((a, i) => ({
-        approver: a,
-        orderIndex: i,
-      }))
-    });
-    setStep('confirm');
+      await submitDocument({
+        file,
+        category: selectedCategory,
+        title: aiTitle,
+        summary: aiSummary,
+        approvalChain: approvers.map((a, i) => ({
+          approver: a,
+          orderIndex: i,
+        }))
+      });
+      setStep('confirm');
+    } catch {
+      toast({ title: 'Submission failed. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (step === 'confirm') {
@@ -230,6 +262,27 @@ export default function UploadDocument() {
           </div>
 
           <div className="institutional-card p-5">
+            <h3 className="mb-1">Document Category</h3>
+            <p className="text-xs text-muted-foreground mb-3">Select the category that best describes this document.</p>
+            <div className="flex flex-wrap gap-2">
+              {['Academic', 'Financial', 'Administrative', 'Procurement', 'General'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={cn(
+                    'px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors',
+                    selectedCategory === cat
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-muted/50'
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="institutional-card p-5">
             <h3 className="mb-1">Approval Chain</h3>
             <p className="text-xs text-muted-foreground mb-3">Select approvers in hierarchical order. Documents will be routed sequentially.</p>
             <div className="relative mb-3">
@@ -277,7 +330,9 @@ export default function UploadDocument() {
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => { setStep('upload'); setFile(null); }}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={selectedApprovers.length === 0}>Submit for Approval</Button>
+            <Button onClick={handleSubmit} disabled={selectedApprovers.length === 0 || isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit for Approval'}
+            </Button>
           </div>
         </div>
       )}

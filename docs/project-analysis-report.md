@@ -4,7 +4,7 @@
 
 ## 1. Project Overview
 
-An internal, AI-powered document approval platform for colleges. Faculty upload PDFs, which route through strict hierarchical approvals with drag-and-drop digital signatures. The system preserves document integrity with immutable storage (Cloudinary), uses Gemini AI for title/summary generation, and enforces role-based access (Director is approve-only).
+An internal, AI-powered document approval platform for colleges. Faculty upload PDFs, which route through strict hierarchical approvals with drag-and-drop digital signatures. The system preserves document integrity with immutable storage (Cloudinary), uses Groq AI (Llama 3.3) for title/summary generation, and enforces role-based access (Director is approve-only).
 
 **Tech Stack (Actual):**
 
@@ -12,10 +12,10 @@ An internal, AI-powered document approval platform for colleges. Faculty upload 
 |-------|----------|---------------|
 | Frontend | React (Next.js) | React 18 + Vite + React Router 6 |
 | Backend | Express / NestJS | Express 5 |
-| Database | PostgreSQL | PostgreSQL via NeonDB + Prisma ORM |
+| Database | PostgreSQL | PostgreSQL via Supabase + Prisma ORM |
 | Storage | S3-compatible | Cloudinary |
 | PDF Rendering | PDF.js | iframe-based viewer |
-| AI | LLM API | Google Gemini 1.5 Flash |
+| AI | LLM API | Groq (Llama 3.3 70B) |
 
 ---
 
@@ -36,7 +36,7 @@ An internal, AI-powered document approval platform for colleges. Faculty upload 
 | `GET` | `/api/documents` | Get user's documents (as sender or chain participant) |
 | `GET` | `/api/documents/:id` | Get single document details |
 | `POST` | `/api/documents` | Upload document + create approval chain |
-| `POST` | `/api/documents/analyze` | AI-analyze PDF (title + summary via Gemini) |
+| `POST` | `/api/documents/analyze` | AI-analyze PDF (title + summary via Groq) |
 | `POST` | `/api/documents/:id/approve` | Approve current step with signature placements |
 | `POST` | `/api/documents/:id/reject` | Reject with optional comment |
 | `GET` | `/health` | Health check |
@@ -52,7 +52,7 @@ An internal, AI-powered document approval platform for colleges. Faculty upload 
 
 - **Approval Chain:** Ordered approvers, first=pending, rest=waiting, sequential progression
 - **Signature Placement:** x/y coordinates + page number stored per approval step
-- **AI Integration:** Gemini 1.5 Flash generates title + summary from extracted PDF text
+- **AI Integration:** Groq Llama 3.3 generates title + summary from extracted PDF text
 - **Audit Logging:** All actions (submitted, approved, rejected) logged with timestamps
 - **File Storage:** PDFs uploaded to Cloudinary (`faculty-approval-docs` folder)
 - **Access Control:** `canAccessDocument()` checks if user is sender or in approval chain
@@ -60,13 +60,14 @@ An internal, AI-powered document approval platform for colleges. Faculty upload 
 ### Environment Variables Required
 
 ```
-DATABASE_URL          - PostgreSQL connection string (NeonDB)
-JWT_SECRET            - JWT signing key (defaults to 'supersecret123' if missing)
+DATABASE_URL          - PostgreSQL connection string (Supabase)
+DIRECT_URL            - Direct PostgreSQL connection for Prisma migrations (Supabase)
+JWT_SECRET            - JWT signing key (REQUIRED, no fallback)
 PORT                  - Server port (defaults to 5001)
 CLOUDINARY_CLOUD_NAME - Cloudinary account name
 CLOUDINARY_API_KEY    - Cloudinary API key
 CLOUDINARY_API_SECRET - Cloudinary API secret
-GEMINI_API_KEY        - Google Gemini API key (optional, falls back to mock)
+GROQ_API_KEY          - Groq API key for AI analysis (free tier)
 ```
 
 ### Key Backend Files
@@ -156,7 +157,7 @@ GEMINI_API_KEY        - Google Gemini API key (optional, falls back to mock)
 | Feature | Notes |
 |---------|-------|
 | PDF Upload | Cloudinary storage, PDF-only validation |
-| AI Title & Summary | Gemini 1.5 Flash with fallback to text snippet |
+| AI Title & Summary | Groq Llama 3.3 with fallback to text snippet |
 | Hierarchical Approval Chain Builder | Ordered selection, search by name/role, avatar display, scrollable list (max-height 360px) |
 | Sequential Approval Flow | First=pending, rest=waiting, moves sequentially |
 | Signature Placement (drag-and-drop) | x/y coordinates, page number, multiple signatures per step |
@@ -264,7 +265,7 @@ backend/src/routes/auth.ts` | Anyone with a valid email can impersonate any user
 | Issue | Location | Impact |
 |-------|----------|--------|
 | Express body limit 50MB, no per-file validation | `backend/src/server.ts` | Memory exhaustion on large uploads |
-| Gemini response parsing is fragile (regex-based) | `backend/src/routes/documents.ts` analyze endpoint | AI analysis fails on unexpected response format |
+| Groq response parsing is regex-based | `backend/src/routes/documents.ts` analyze endpoint | AI analysis fails on unexpected response format |
 | `bcryptjs` imported but unused | `backend/package.json` | Misleading dependency suggesting password hashing exists |
 | No structured error responses from backend | All route handlers | Inconsistent frontend error handling, poor debugging |
 | No error toast notifications for failed API calls | Frontend stores | Users see silent failures on network errors |
@@ -335,7 +336,7 @@ User Uploads PDF
     v
 Optional: POST /api/documents/analyze
     |-- pdf-parse extracts text
-    |-- Gemini generates title/summary (or fallback)
+    |-- Groq generates title/summary (or fallback)
     '-- Returns {title, summary}
 
 User Submits with Approval Chain

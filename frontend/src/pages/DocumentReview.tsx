@@ -27,6 +27,7 @@ import {
   Collapsible, CollapsibleTrigger, CollapsibleContent,
 } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
+import PdfViewer from '@/components/PdfViewer';
 
 type ReviewPhase = 'idle' | 'gallery' | 'placing' | 'placed';
 
@@ -54,6 +55,8 @@ export default function DocumentReview() {
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [auditOpen, setAuditOpen] = useState(false);
   const [versionOpen, setVersionOpen] = useState(false);
   const [showReviseModal, setShowReviseModal] = useState(false);
@@ -87,7 +90,7 @@ export default function DocumentReview() {
     setPhase('placing');
   };
 
-  const handlePdfClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePdfClick = (e: React.MouseEvent<HTMLDivElement>, pageNumber: number) => {
     if (phase !== 'placing' || !selectedSig) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -96,7 +99,7 @@ export default function DocumentReview() {
       id: `p-${Date.now()}`,
       signatureId: selectedSig.id,
       x, y,
-      pageNumber: 1,
+      pageNumber,
     }]);
     setPhase('placed');
     setSelectedSig(null);
@@ -123,6 +126,10 @@ export default function DocumentReview() {
   const removePlacement = (pId: string) => setPlacements(prev => prev.filter(p => p.id !== pId));
 
   const handleConfirmSign = async () => {
+    if (placements.length === 0) {
+      toast({ title: 'Please place at least one signature before approving.', variant: 'destructive' });
+      return;
+    }
     // Attach the actual signature image (base64) to each placement so the backend can embed it in the signed PDF
     const placementsWithImages = placements.map(p => {
       const sig = getSignatureById(p.signatureId);
@@ -173,8 +180,8 @@ export default function DocumentReview() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl">{doc.title}</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-lg sm:text-2xl break-words">{doc.title}</h1>
             <StatusBadge status={doc.status} />
             {doc.version > 1 && (
               <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
@@ -296,73 +303,81 @@ export default function DocumentReview() {
         {/* Center - PDF Viewer */}
         <div className="lg:col-span-6">
           <div
-            className={cn('institutional-card aspect-[3/4] bg-muted/30 relative overflow-hidden select-none border',
-              phase === 'placing' && 'cursor-crosshair ring-2 ring-primary/30'
+            className={cn('institutional-card bg-muted/30 select-none border overflow-y-auto max-h-[80vh]',
+              phase === 'placing' && 'ring-2 ring-primary/30'
             )}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           >
-            {/* PDF iframe via backend proxy to avoid Cloudinary CORS/download headers */}
-            <iframe
-              src={`${API_URL}/documents/${doc.id}/pdf?token=${encodeURIComponent(localStorage.getItem('token') || '')}#toolbar=0&navpanes=0`}
-              className="absolute inset-0 w-full h-full border-none"
-              title="PDF View"
-            />
+            <PdfViewer
+              url={`${API_URL}/documents/${doc.id}/pdf?token=${encodeURIComponent(localStorage.getItem('token') || '')}`}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              onTotalPagesChange={setTotalPages}
+              onPageClick={handlePdfClick}
+              cursorClass={phase === 'placing' ? 'cursor-crosshair' : ''}
+              renderOverlay={(pageNum) => (
+                <>
+                  {/* Existing approval placements (read-only) */}
+                  {doc.approval_chain.filter(s => s.placements?.length).map(step =>
+                    step.placements!.filter(p => (p.pageNumber || 1) === pageNum).map(p => (
+                      <div key={p.id} className="absolute" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
+                        <div className="rounded border border-success/50 bg-success/5 px-2 py-1">
+                          {p.signatureImage ? (
+                            <>
+                              <img src={p.signatureImage} alt={step.approver.name} className="h-8 w-auto max-w-[80px] object-contain" />
+                              <p className="text-[7px] text-success/60 text-center mt-0.5">{step.approver.name}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-[9px] font-semibold text-success whitespace-nowrap">{step.approver.name}</p>
+                              <p className="text-[7px] text-success/60">{roleLabels[step.approver.role]}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
 
-            {/* Transparent click layer for signature placement - only active when placing or browsing signatures */}
-            <div 
-              className={cn("absolute inset-0 z-10", phase === 'placing' ? 'cursor-crosshair' : 'pointer-events-none')}
-              onClick={handlePdfClick}
-            />
-
-            {/* Show existing approval placements from chain (read-only) */}
-            <div className="absolute inset-0 z-20 pointer-events-none">
-              {doc.approval_chain.filter(s => s.placements?.length).map(step =>
-                step.placements!.map(p => (
-                  <div key={p.id} className="absolute" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
-                    <div className="rounded border border-success/50 bg-success/5 px-2 py-1">
-                      <p className="text-[9px] font-semibold text-success whitespace-nowrap">{step.approver.name}</p>
-                      <p className="text-[7px] text-success/60">{roleLabels[step.approver.role]}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {/* Current placement (active) */}
-              {placements.map((p) => {
-                const sig = getSignatureById(p.signatureId);
-                return (
-                  <div
-                    key={p.id}
-                    className="absolute group cursor-grab active:cursor-grabbing pointer-events-auto"
-                    style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}
-                    onMouseDown={(e) => handleMouseDown(e, p.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="rounded border-2 border-dashed border-primary/50 bg-primary/5 px-3 py-1.5 relative">
-                      {sig?.preview ? (
-                        <img src={sig.preview} alt={sig.name} className="h-8 w-auto max-w-[80px] object-contain" />
-                      ) : (
-                        <>
-                          <p className="text-[10px] font-semibold text-primary whitespace-nowrap">{currentUser.name}</p>
-                          <p className="text-[8px] text-primary/60">{sig?.type === 'stamp' ? 'STAMP' : roleLabels[currentUser.role]}</p>
-                        </>
-                      )}
-                      <button
-                        className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); removePlacement(p.id); }}
+                  {/* Current placements being placed (active, draggable) */}
+                  {placements.filter(p => (p.pageNumber || 1) === pageNum).map((p) => {
+                    const sig = getSignatureById(p.signatureId);
+                    return (
+                      <div
+                        key={p.id}
+                        className="absolute group cursor-grab active:cursor-grabbing pointer-events-auto"
+                        style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}
+                        onMouseDown={(e) => handleMouseDown(e, p.id)}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                      <GripVertical className="absolute -left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        <div className="rounded border-2 border-dashed border-primary/50 bg-primary/5 px-3 py-1.5 relative">
+                          {sig?.preview ? (
+                            <img src={sig.preview} alt={sig.name} className="h-8 w-auto max-w-[80px] object-contain" />
+                          ) : (
+                            <>
+                              <p className="text-[10px] font-semibold text-primary whitespace-nowrap">{currentUser.name}</p>
+                              <p className="text-[8px] text-primary/60">{sig?.type === 'stamp' ? 'STAMP' : roleLabels[currentUser.role]}</p>
+                            </>
+                          )}
+                          <button
+                            className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); removePlacement(p.id); }}
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                          <GripVertical className="absolute -left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2 text-center truncate">Source: {doc.file_name}</p>
+          <p className="text-[10px] text-muted-foreground mt-2 text-center truncate">
+            {totalPages > 0 && `${totalPages} page${totalPages > 1 ? 's' : ''} • `}Source: {doc.file_name}
+          </p>
         </div>
 
         {/* Right - Actions */}

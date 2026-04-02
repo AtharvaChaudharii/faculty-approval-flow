@@ -4,6 +4,8 @@ import { fetchWithAuth } from './api';
 
 let documents: Document[] = [];
 let isLoaded = false;
+let isLoading = false;
+let loadError: string | null = null;
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -21,11 +23,11 @@ function subscribe(cb: () => void) {
 
 // Background poller/fetcher
 export async function refreshDocuments() {
+  isLoading = true;
+  loadError = null;
+  notify();
   try {
     const data = await fetchWithAuth('/documents');
-    // Map Prisma schema format back to what the frontend expects if necessary:
-    // Our Prisma schema creates camelCase nested models, and mock-data uses some snake_case.
-    // Let's coerce them for frontend compatibility without rewriting the entire frontend.
     documents = data.map((d: any) => ({
       ...d,
       sender: d.sender,
@@ -49,9 +51,13 @@ export async function refreshDocuments() {
       file_name: d.fileName ?? d.file_name
     }));
     isLoaded = true;
-    notify();
-  } catch (err) {
+    loadError = null;
+  } catch (err: any) {
     console.error('Failed to load documents:', err);
+    loadError = err?.message || 'Failed to load documents';
+  } finally {
+    isLoading = false;
+    notify();
   }
 }
 
@@ -59,7 +65,7 @@ export function useDocuments() {
   const docs = useSyncExternalStore(subscribe, getSnapshot);
 
   // Auto-fetch if not loaded
-  if (!isLoaded && typeof window !== 'undefined') {
+  if (!isLoaded && !isLoading && typeof window !== 'undefined') {
     refreshDocuments();
   }
 
@@ -107,7 +113,6 @@ export function useDocuments() {
   }, []);
 
   const submitDocument = useCallback(async (newDocData: any) => {
-    // newDocData might contain File, mapped to FormData
     try {
       const formData = new FormData();
       formData.append('file', newDocData.file);
@@ -123,16 +128,36 @@ export function useDocuments() {
       refreshDocuments();
     } catch (err) {
       console.error('Submission failed', err);
+      throw err;
+    }
+  }, []);
+
+  const bulkAction = useCallback(async (documentIds: string[], action: 'approve' | 'reject', comment?: string) => {
+    try {
+      const result = await fetchWithAuth('/documents/bulk-action', {
+        method: 'POST',
+        body: JSON.stringify({ documentIds, action, comment }),
+      });
+      refreshDocuments();
+      return result;
+    } catch (err) {
+      console.error('Bulk action failed', err);
+      throw err;
     }
   }, []);
 
   return {
-    documents: docs, // API already filters visible docs based on token!
+    documents: docs,
     allDocuments: docs,
+    isLoading,
+    isLoaded,
+    loadError,
     getDoc,
     approveDocument,
     rejectDocument,
     reviseDocument,
     submitDocument,
+    bulkAction,
+    retry: refreshDocuments,
   };
 }

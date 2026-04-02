@@ -28,7 +28,7 @@ export default function Archive() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex gap-1 bg-muted p-1 rounded-lg">
+        <div className="flex gap-1 bg-muted p-1 rounded-lg flex-wrap">
           {categories.map((cat) => (
             <button
               key={cat}

@@ -190,7 +190,7 @@ Please return the response as a valid JSON object matching this schema:
       if (aiData.title) title = aiData.title;
       if (aiData.summary) summary = aiData.summary;
     } catch (aiError: any) {
-      console.warn('[AI Analysis] Gemini API failed, using text extraction fallback:', aiError?.status || aiError?.message || aiError);
+      console.warn('[AI Analysis] Groq API failed, using text extraction fallback:', aiError?.status || aiError?.message || aiError);
       // Fallback: extract title from first line, summary from first few lines
       const lines = fullText.trim().split('\n').filter((l: string) => l.trim().length > 0);
       if (lines.length > 0) {
@@ -234,6 +234,26 @@ router.post('/', authMiddleware, upload.single('file'), async (req: any, res) =>
     const uniqueIds = new Set(chainIds);
     if (uniqueIds.size !== chainIds.length) {
       return res.status(400).json({ error: 'Duplicate approvers are not allowed in the chain' });
+    }
+
+    // Validate hierarchy order: Faculty < Asst Prof < HOD < Principal < Director
+    const ROLE_RANK: Record<string, number> = {
+      faculty: 0, assistant_professor: 1, hod: 2, principal: 3, director: 4,
+    };
+    const chainUsers = await prisma.user.findMany({
+      where: { id: { in: chainIds } },
+      select: { id: true, role: true },
+    });
+    const chainWithRanks = chainIds.map(id => {
+      const user = chainUsers.find(u => u.id === id);
+      return { id, rank: ROLE_RANK[user?.role || ''] ?? 0 };
+    });
+    for (let i = 1; i < chainWithRanks.length; i++) {
+      if (chainWithRanks[i].rank < chainWithRanks[i - 1].rank) {
+        return res.status(400).json({
+          error: 'Approval chain must follow hierarchy order: Faculty → Asst. Professor → HOD → Principal → Director',
+        });
+      }
     }
 
     const doc = await prisma.document.create({
@@ -327,8 +347,11 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
       return res.status(403).json({ error: 'Not your turn to approve' });
     }
 
-    // Validate comment length on placements
-    if (placements && placements.length > 20) {
+    // Require at least one signature placement
+    if (!placements || placements.length === 0) {
+      return res.status(400).json({ error: 'At least one signature placement is required to approve' });
+    }
+    if (placements.length > 20) {
       return res.status(400).json({ error: 'Too many signature placements (max 20)' });
     }
 
@@ -438,6 +461,91 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to approve document' });
+  }
+});
+
+// POST Bulk approve/reject multiple documents
+router.post('/bulk-action', authMiddleware, async (req: any, res) => {
+  try {
+    const { documentIds, action, comment } = req.body;
+    if (!documentIds || !Array.isArray(documentIds) || documentIds.length === 0) {
+      return res.status(400).json({ error: 'No documents selected' });
+    }
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'Action must be "approve" or "reject"' });
+    }
+    if (documentIds.length > 20) {
+      return res.status(400).json({ error: 'Maximum 20 documents per bulk action' });
+    }
+
+    const results: { docId: string; success: boolean; error?: string }[] = [];
+
+    for (const docId of documentIds) {
+      try {
+        const doc = await prisma.document.findUnique({
+          where: { id: docId },
+          include: {
+            sender: true,
+            approvalChain: {
+              include: { approver: true },
+              orderBy: { orderIndex: 'asc' },
+            },
+          },
+        });
+
+        if (!doc || doc.status !== 'pending') {
+          results.push({ docId, success: false, error: 'Not found or not pending' });
+          continue;
+        }
+
+        const currentStep = doc.approvalChain.find((s: any) => s.status === 'pending');
+        if (!currentStep || currentStep.approverId !== req.user.id) {
+          results.push({ docId, success: false, error: 'Not your turn' });
+          continue;
+        }
+
+        if (action === 'approve') {
+          await prisma.$transaction(async (tx) => {
+            await tx.approvalStep.update({
+              where: { id: currentStep.id },
+              data: { status: 'approved', actedAt: new Date() },
+            });
+            await tx.auditEntry.create({
+              data: { action: 'approved', documentId: docId, actorId: req.user.id },
+            });
+            const isLast = doc.approvalChain.indexOf(currentStep) === doc.approvalChain.length - 1;
+            if (isLast) {
+              await tx.document.update({ where: { id: docId }, data: { status: 'approved' } });
+            } else {
+              const nextStep = doc.approvalChain[doc.approvalChain.indexOf(currentStep) + 1];
+              await tx.approvalStep.update({ where: { id: nextStep.id }, data: { status: 'pending' } });
+            }
+          });
+        } else {
+          await prisma.$transaction(async (tx) => {
+            await tx.approvalStep.update({
+              where: { id: currentStep.id },
+              data: { status: 'rejected', actedAt: new Date(), comment: comment || 'Bulk rejected' },
+            });
+            await tx.document.update({ where: { id: docId }, data: { status: 'rejected' } });
+            await tx.auditEntry.create({
+              data: { action: 'rejected', documentId: docId, actorId: req.user.id, details: comment || 'Bulk rejected' },
+            });
+          });
+        }
+
+        results.push({ docId, success: true });
+      } catch (err) {
+        results.push({ docId, success: false, error: 'Internal error' });
+      }
+    }
+
+    const succeeded = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    res.json({ results, summary: { succeeded, failed, total: documentIds.length } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Bulk action failed' });
   }
 });
 
