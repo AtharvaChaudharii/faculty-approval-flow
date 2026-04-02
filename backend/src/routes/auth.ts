@@ -4,7 +4,11 @@ import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret123';
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is required');
+  process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;

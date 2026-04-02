@@ -122,31 +122,43 @@ export default function DocumentReview() {
   const handleMouseUp = () => setDragging(null);
   const removePlacement = (pId: string) => setPlacements(prev => prev.filter(p => p.id !== pId));
 
-  const handleConfirmSign = () => {
+  const handleConfirmSign = async () => {
     // Attach the actual signature image (base64) to each placement so the backend can embed it in the signed PDF
     const placementsWithImages = placements.map(p => {
       const sig = getSignatureById(p.signatureId);
       return { ...p, signatureImage: sig?.preview || null };
     });
-    approveDocument(doc.id, placementsWithImages);
-    setPlacements([]);
-    setPhase('idle');
-    toast({ title: 'Document approved successfully.' });
+    try {
+      await approveDocument(doc.id, placementsWithImages);
+      setPlacements([]);
+      setPhase('idle');
+      toast({ title: 'Document approved successfully.' });
+    } catch {
+      toast({ title: 'Failed to approve document.', variant: 'destructive' });
+    }
   };
 
-  const handleReject = () => {
-    rejectDocument(doc.id, rejectComment);
-    setShowRejectModal(false);
-    setRejectComment('');
-    toast({ title: 'Document rejected.', variant: 'destructive' });
+  const handleReject = async () => {
+    try {
+      await rejectDocument(doc.id, rejectComment);
+      setShowRejectModal(false);
+      setRejectComment('');
+      toast({ title: 'Document rejected.', variant: 'destructive' });
+    } catch {
+      toast({ title: 'Failed to reject document.', variant: 'destructive' });
+    }
   };
 
-  const handleRevise = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRevise = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    reviseDocument(doc.id, file.name);
-    setShowReviseModal(false);
-    toast({ title: `Version ${doc.version + 1} submitted. Approval chain restarted.` });
+    try {
+      await reviseDocument(doc.id, file);
+      setShowReviseModal(false);
+      toast({ title: `Version ${doc.version + 1} submitted. Approval chain restarted.` });
+    } catch {
+      toast({ title: 'Failed to submit revision.', variant: 'destructive' });
+    }
   };
 
   const getSignatureById = (sigId: string) => signatures.find(s => s.id === sigId);

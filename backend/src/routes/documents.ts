@@ -327,34 +327,58 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
       return res.status(403).json({ error: 'Not your turn to approve' });
     }
 
-    // Save signature placements with x/y coordinates per page per approver
-    await prisma.approvalStep.update({
-      where: { id: currentStep.id },
-      data: {
-        status: 'approved',
-        actedAt: new Date(),
-        placements: {
-          create: placements?.map((p: any) => ({
-            signatureId: p.signatureId,
-            signatureImage: p.signatureImage || null,
-            x: parseFloat(p.x),
-            y: parseFloat(p.y),
-            pageNumber: parseInt(p.pageNumber) || 1
-          })) || []
+    // Validate comment length on placements
+    if (placements && placements.length > 20) {
+      return res.status(400).json({ error: 'Too many signature placements (max 20)' });
+    }
+
+    // Wrap all DB mutations in a transaction
+    const isLastStep = currentStepIndex === doc.approvalChain.length - 1;
+
+    await prisma.$transaction(async (tx) => {
+      // Save signature placements with x/y coordinates per page per approver
+      await tx.approvalStep.update({
+        where: { id: currentStep.id },
+        data: {
+          status: 'approved',
+          actedAt: new Date(),
+          placements: {
+            create: placements?.map((p: any) => ({
+              signatureId: p.signatureId,
+              signatureImage: p.signatureImage || null,
+              x: parseFloat(p.x),
+              y: parseFloat(p.y),
+              pageNumber: parseInt(p.pageNumber) || 1
+            })) || []
+          }
         }
+      });
+
+      // Add Audit Log
+      await tx.auditEntry.create({
+        data: {
+          action: 'approved',
+          documentId: id,
+          actorId: req.user.id
+        }
+      });
+
+      if (isLastStep) {
+        await tx.document.update({
+          where: { id },
+          data: { status: 'approved' }
+        });
+      } else {
+        // Advance to next approver
+        const nextStep = doc.approvalChain[currentStepIndex + 1];
+        await tx.approvalStep.update({
+          where: { id: nextStep.id },
+          data: { status: 'pending' }
+        });
       }
     });
 
-    // Add Audit Log
-    await prisma.auditEntry.create({
-      data: {
-        action: 'approved',
-        documentId: id,
-        actorId: req.user.id
-      }
-    });
-
-    // Build list of all approved steps so far (including current one just approved)
+    // Emails sent outside transaction (fire-and-forget, shouldn't roll back DB on failure)
     const approvedSteps = doc.approvalChain
       .filter((s: any, i: number) => s.status === 'approved' || i === currentStepIndex)
       .map((s: any) => ({ name: s.approver.name, role: s.approver.role }));
@@ -362,7 +386,7 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
     const currentApprover = currentStep.approver;
     const approverRole = currentApprover.role.replace('_', ' ');
 
-    // Notify sender about approval progress (who just approved)
+    // Notify sender about approval progress
     const progressEmail = approvalProgressEmail(
       doc.sender.name,
       currentApprover.name,
@@ -373,9 +397,9 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
       doc.id
     );
     progressEmail.to = doc.sender.email;
-    sendEmail(progressEmail); // fire-and-forget
+    sendEmail(progressEmail);
 
-    // Notify all previous approvers in the chain about this new approval
+    // Notify all previous approvers
     const previousApprovers = doc.approvalChain.slice(0, currentStepIndex);
     for (const prevStep of previousApprovers) {
       if ((prevStep as any).status === 'approved') {
@@ -390,31 +414,16 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
           doc.id
         );
         updateEmail.to = (prevStep as any).approver.email;
-        sendEmail(updateEmail); // fire-and-forget
+        sendEmail(updateEmail);
       }
     }
 
-    // Determine next step or finish
-    const isLastStep = currentStepIndex === doc.approvalChain.length - 1;
     if (isLastStep) {
-      await prisma.document.update({
-        where: { id },
-        data: { status: 'approved' }
-      });
-
-      // Send fully-approved email to sender
       const approvedEmail = fullyApprovedEmail(doc.sender.name, doc.title, doc.id);
       approvedEmail.to = doc.sender.email;
-      sendEmail(approvedEmail); // fire-and-forget
+      sendEmail(approvedEmail);
     } else {
-      // Advance to next approver
       const nextStep = doc.approvalChain[currentStepIndex + 1];
-      await prisma.approvalStep.update({
-        where: { id: nextStep.id },
-        data: { status: 'pending' }
-      });
-
-      // Email the next approver
       const advanceEmail = stepAdvanceEmail(
         nextStep.approver.name,
         doc.sender.name,
@@ -422,7 +431,7 @@ router.post('/:id/approve', authMiddleware, async (req: any, res) => {
         doc.id
       );
       advanceEmail.to = nextStep.approver.email;
-      sendEmail(advanceEmail); // fire-and-forget
+      sendEmail(advanceEmail);
     }
 
     res.json({ success: true, isComplete: isLastStep });
@@ -491,27 +500,34 @@ router.post('/:id/reject', authMiddleware, async (req: any, res) => {
       return res.status(403).json({ error: 'Not your turn to act' });
     }
 
-    await prisma.approvalStep.update({
-      where: { id: currentStep.id },
-      data: {
-        status: 'rejected',
-        actedAt: new Date(),
-        comment
-      }
-    });
+    // Validate comment length
+    if (comment && comment.length > 2000) {
+      return res.status(400).json({ error: 'Comment too long (max 2000 characters)' });
+    }
 
-    await prisma.document.update({
-      where: { id },
-      data: { status: 'rejected' }
-    });
+    await prisma.$transaction(async (tx) => {
+      await tx.approvalStep.update({
+        where: { id: currentStep.id },
+        data: {
+          status: 'rejected',
+          actedAt: new Date(),
+          comment
+        }
+      });
 
-    await prisma.auditEntry.create({
-      data: {
-        action: 'rejected',
-        documentId: id,
-        actorId: req.user.id,
-        details: comment
-      }
+      await tx.document.update({
+        where: { id },
+        data: { status: 'rejected' }
+      });
+
+      await tx.auditEntry.create({
+        data: {
+          action: 'rejected',
+          documentId: id,
+          actorId: req.user.id,
+          details: comment
+        }
+      });
     });
 
     // Generate AI-drafted rejection email and send to sender
@@ -539,6 +555,98 @@ router.post('/:id/reject', authMiddleware, async (req: any, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to reject document' });
+  }
+});
+
+// POST Revise — sender uploads new version of a rejected document, resets approval chain
+router.post('/:id/revise', authMiddleware, upload.single('file'), async (req: any, res) => {
+  try {
+    const { id } = req.params;
+
+    const doc = await prisma.document.findUnique({
+      where: { id },
+      include: {
+        sender: true,
+        approvalChain: {
+          include: { approver: true },
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+    });
+
+    if (!doc) return res.status(404).json({ error: 'Document not found' });
+    if (doc.status !== 'rejected') {
+      return res.status(400).json({ error: 'Only rejected documents can be revised' });
+    }
+    if (doc.senderId !== req.user.id) {
+      return res.status(403).json({ error: 'Only the sender can revise this document' });
+    }
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const newVersion = doc.version + 1;
+
+    // Reset all approval steps: first = pending, rest = waiting
+    // Delete old placements for all steps
+    for (const step of doc.approvalChain) {
+      await prisma.placement.deleteMany({ where: { approvalStepId: step.id } });
+      await prisma.approvalStep.update({
+        where: { id: step.id },
+        data: {
+          status: step.orderIndex === 0 ? 'pending' : 'waiting',
+          actedAt: null,
+          comment: null,
+        },
+      });
+    }
+
+    // Update document
+    await prisma.document.update({
+      where: { id },
+      data: {
+        status: 'pending',
+        version: newVersion,
+        fileName: req.file.path,
+      },
+    });
+
+    // Create version history entry
+    await prisma.documentVersion.create({
+      data: {
+        documentId: id,
+        version: newVersion,
+        fileName: req.file.path,
+        uploadedBy: req.user.id,
+      },
+    });
+
+    // Audit log
+    await prisma.auditEntry.create({
+      data: {
+        action: 'revised',
+        documentId: id,
+        actorId: req.user.id,
+        version: newVersion,
+        details: `Revised to version ${newVersion}`,
+      },
+    });
+
+    // Email first approver about revised document
+    const firstApprover = doc.approvalChain.find((s: any) => s.orderIndex === 0);
+    if (firstApprover) {
+      const email = stepAdvanceEmail(
+        firstApprover.approver.name,
+        doc.sender.name,
+        doc.title,
+        doc.id
+      );
+      email.to = firstApprover.approver.email;
+      sendEmail(email);
+    }
+
+    res.json({ success: true, version: newVersion });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to revise document' });
   }
 });
 

@@ -5,7 +5,7 @@ import {
   Menu, X, ChevronRight, Bell, UserCircle,
 } from 'lucide-react';
 import { roleLabels } from '@/lib/mock-data';
-import { useCurrentUser } from '@/lib/auth-store';
+import { useCurrentUser, logout } from '@/lib/auth-store';
 import { useDocuments } from '@/lib/document-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -102,9 +102,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <p className="text-sm font-medium text-sidebar-foreground truncate">{currentUser.name}</p>
               <p className="text-[11px] text-sidebar-foreground/50">{roleLabels[currentUser.role]}</p>
             </div>
-            <Link to="/login" className="text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-colors">
+            <button onClick={() => { logout(); window.location.href = '/login'; }} className="text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-colors">
               <LogOut className="h-4 w-4" />
-            </Link>
+            </button>
           </div>
         </div>
       </aside>

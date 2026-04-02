@@ -74,6 +74,7 @@ export function useDocuments() {
       refreshDocuments();
     } catch (err) {
       console.error('Approval failed', err);
+      throw err;
     }
   }, []);
 
@@ -86,13 +87,23 @@ export function useDocuments() {
       refreshDocuments();
     } catch (err) {
       console.error('Rejection failed', err);
+      throw err;
     }
   }, []);
 
-  const reviseDocument = useCallback((docId: string, newFileName: string) => {
-    // Left as stub for now, would typically be a multipart/form-data POST
-    console.warn("Revise document not fully implemented in API yet");
-    refreshDocuments();
+  const reviseDocument = useCallback(async (docId: string, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await fetchWithAuth(`/documents/${docId}/revise`, {
+        method: 'POST',
+        body: formData,
+      });
+      refreshDocuments();
+    } catch (err) {
+      console.error('Revision failed', err);
+      throw err;
+    }
   }, []);
 
   const submitDocument = useCallback(async (newDocData: any) => {

@@ -60,6 +60,13 @@ export async function checkSession() {
   }
 }
 
+export function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+  currentUser = null;
+  notify();
+}
+
 export function getCurrentUser(): User {
   return currentUser as User;
 }

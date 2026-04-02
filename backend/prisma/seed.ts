@@ -25,11 +25,18 @@ async function buildUsers() {
 async function main() {
   const users = await buildUsers();
   for (const u of users) {
-    await prisma.user.upsert({
-      where: { email: u.email },
-      update: { password: u.password },
-      create: u
+    // Try update first, then create if not found
+    const existing = await prisma.user.findFirst({
+      where: { OR: [{ id: u.id }, { email: u.email }] }
     });
+    if (existing) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { password: u.password, name: u.name, role: u.role, department: u.department, avatar: u.avatar }
+      });
+    } else {
+      await prisma.user.create({ data: u });
+    }
   }
   console.log('Seeded mock users! (default password: password123)');
 }

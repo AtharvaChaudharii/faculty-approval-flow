@@ -242,7 +242,8 @@ GEMINI_API_KEY        - Google Gemini API key (optional, falls back to mock)
 
 | Issue | Location | Impact |
 |-------|----------|--------|
-| **No password authentication** | `backend/src/routes/auth.ts` | Anyone with a valid email can impersonate any user |
+| **No password authentication** | `
+backend/src/routes/auth.ts` | Anyone with a valid email can impersonate any user |
 | **Hardcoded JWT secret fallback** | `backend/src/middleware/auth.ts` line 4 — `'supersecret123'` | Token forgery if env var missing in production |
 | **Signatures lost on page refresh** | `frontend/src/lib/signature-store.ts` | Users must re-upload signatures every browser session |
 | **Logout is broken** | `frontend/src/components/AppLayout.tsx` line 105 | Users cannot securely sign out; token persists in localStorage |

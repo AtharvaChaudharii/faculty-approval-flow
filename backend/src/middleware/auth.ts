@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret123';
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const authMiddleware = (req: any, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
