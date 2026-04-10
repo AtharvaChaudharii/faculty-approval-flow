@@ -402,7 +402,7 @@ export default function DocumentReview() {
 
               <div className="space-y-2">
                 <Button className="w-full" variant="outline" onClick={() => setPhase('gallery')}>
-                  <Pen className="h-4 w-4 mr-1.5" /> {placements.length > 0 ? 'Add Another Signature' : 'Place Signature & Approve'}
+                  <Pen className="h-4 w-4 mr-1.5" /> <span className="truncate">{placements.length > 0 ? 'Add Another Signature' : 'Place Signature & Approve'}</span>
                 </Button>
                 {placements.length > 0 && (
                   <Button className="w-full" onClick={handleConfirmSign}>
