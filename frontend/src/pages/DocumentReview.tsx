@@ -273,14 +273,14 @@ export default function DocumentReview() {
                       fallbackAvatar={step.approver.avatar}
                       className={cn('h-7 w-7 ring-2',
                         step.status === 'approved' ? 'ring-success/30' :
-                        step.status === 'rejected' ? 'ring-destructive/30' :
-                        step.status === 'pending' ? 'ring-warning/30' : 'ring-muted'
+                          step.status === 'rejected' ? 'ring-destructive/30' :
+                            step.status === 'pending' ? 'ring-warning/30' : 'ring-muted'
                       )}
                       fallbackClassName={cn('text-[9px] font-semibold',
                         step.status === 'approved' ? 'bg-success/10 text-success' :
-                        step.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
-                        step.status === 'pending' ? 'bg-warning/10 text-warning' :
-                        'bg-muted text-muted-foreground'
+                          step.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                            step.status === 'pending' ? 'bg-warning/10 text-warning' :
+                              'bg-muted text-muted-foreground'
                       )}
                     />
                     {i < doc.approval_chain.length - 1 && <div className="w-px h-4 bg-border mt-1" />}
