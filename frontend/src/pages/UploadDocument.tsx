@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Upload, FileText, Sparkles, Check, X, Search } from 'lucide-react';
+import { Upload, FileText, Sparkles, Check, X, Search, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { roleLabels } from '@/lib/mock-data';
@@ -298,33 +298,48 @@ export default function UploadDocument() {
               {filteredApprovers.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">No matching approvers found.</p>
               )}
-              {filteredApprovers.map((a) => {
-                const isSelected = selectedApprovers.includes(a.id);
-                const order = selectedApprovers.indexOf(a.id);
-                return (
-                  <button
-                    key={a.id}
-                    onClick={() => toggleApprover(a.id)}
-                    className={cn(
-                      'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors',
-                      isSelected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
-                    )}
-                  >
-                    <div className={cn(
-                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold',
-                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    )}>
-                      {isSelected ? order + 1 : ''}
-                    </div>
-                    <UserAvatar userId={a.id} name={a.name} fallbackAvatar={a.avatar} className="h-8 w-8" fallbackClassName="text-[10px] font-medium" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{a.name}</p>
-                      <p className="text-xs text-muted-foreground">{roleLabels[a.role as UserRole] || a.role}</p>
-                    </div>
-                    {isSelected && <Check className="h-4 w-4 text-primary" />}
-                  </button>
-                );
-              })}
+              {(() => {
+                // Compute max rank among selected approvers — disable anyone ranked lower
+                const maxSelectedRank = selectedApprovers.reduce((max, id) => {
+                  const user = availableApprovers.find(u => u.id === id);
+                  return Math.max(max, getRoleRank(user?.role || ''));
+                }, -1);
+
+                return filteredApprovers.map((a) => {
+                  const isSelected = selectedApprovers.includes(a.id);
+                  const order = selectedApprovers.indexOf(a.id);
+                  const rank = getRoleRank(a.role);
+                  const isLocked = !isSelected && selectedApprovers.length > 0 && rank < maxSelectedRank;
+
+                  return (
+                    <button
+                      key={a.id}
+                      onClick={() => !isLocked && toggleApprover(a.id)}
+                      disabled={isLocked}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors',
+                        isSelected ? 'border-primary bg-primary/5' :
+                        isLocked ? 'border-border opacity-40 cursor-not-allowed' :
+                        'border-border hover:bg-muted/50'
+                      )}
+                    >
+                      <div className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold',
+                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      )}>
+                        {isSelected ? order + 1 : isLocked ? '—' : ''}
+                      </div>
+                      <UserAvatar userId={a.id} name={a.name} fallbackAvatar={a.avatar} className="h-8 w-8" fallbackClassName="text-[10px] font-medium" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{a.name}</p>
+                        <p className="text-xs text-muted-foreground">{roleLabels[a.role as UserRole] || a.role}</p>
+                      </div>
+                      {isSelected && <Check className="h-4 w-4 text-primary" />}
+                      {isLocked && <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                    </button>
+                  );
+                });
+              })()}
             </div>
           </div>
 

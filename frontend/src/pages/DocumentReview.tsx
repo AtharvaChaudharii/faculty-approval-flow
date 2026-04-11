@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useRef } from 'react';
-import { API_URL } from '@/lib/api';
+import { useState, useRef, useEffect } from 'react';
+import { API_URL, fetchWithAuth } from '@/lib/api';
 import {
   ArrowLeft, FileText, Check, X, Clock, CheckCircle2, XCircle,
   Sparkles, Download, Pen, Move, GripVertical, Image as ImageIcon,
@@ -50,6 +50,7 @@ export default function DocumentReview() {
   const { signatures } = useSignatures();
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectComment, setRejectComment] = useState('');
+  const [approveComment, setApproveComment] = useState('');
   const [phase, setPhase] = useState<ReviewPhase>('idle');
   const [selectedSig, setSelectedSig] = useState<SignatureItem | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
@@ -60,7 +61,18 @@ export default function DocumentReview() {
   const [auditOpen, setAuditOpen] = useState(false);
   const [versionOpen, setVersionOpen] = useState(false);
   const [showReviseModal, setShowReviseModal] = useState(false);
+  const [signatureFields, setSignatureFields] = useState<{ x: number; y: number; pageNumber: number; keyword: string }[]>([]);
+  const [autoPlacing, setAutoPlacing] = useState(false);
   const reviseFileRef = useRef<HTMLInputElement>(null);
+
+  // Fetch signature field suggestions when document loads
+  useEffect(() => {
+    if (id) {
+      fetchWithAuth(`/documents/${id}/signature-fields`)
+        .then(data => setSignatureFields(data.suggestions || []))
+        .catch(() => setSignatureFields([]));
+    }
+  }, [id]);
 
   if (!doc) {
     return (
@@ -136,12 +148,50 @@ export default function DocumentReview() {
       return { ...p, signatureImage: sig?.preview || null };
     });
     try {
-      await approveDocument(doc.id, placementsWithImages);
+      await approveDocument(doc.id, placementsWithImages, approveComment);
       setPlacements([]);
       setPhase('idle');
+      setApproveComment('');
       toast({ title: 'Document approved successfully.' });
     } catch {
       toast({ title: 'Failed to approve document.', variant: 'destructive' });
+    }
+  };
+
+  const handleAutoApprove = async () => {
+    // Use the first signature from gallery, or fall back to no preview
+    const defaultSig = signatures[0];
+    if (!defaultSig) {
+      toast({ title: 'No signature found. Upload one in Profile & Signatures.', variant: 'destructive' });
+      return;
+    }
+
+    if (signatureFields.length === 0) {
+      toast({ title: 'No signature/remark fields detected in this PDF. Place manually.', variant: 'destructive' });
+      return;
+    }
+
+    setAutoPlacing(true);
+    try {
+      // Create placements at detected positions
+      const autoplacements = signatureFields.map((field, i) => ({
+        id: `auto-${Date.now()}-${i}`,
+        signatureId: defaultSig.id,
+        signatureImage: defaultSig.preview || null,
+        x: field.x,
+        y: field.y,
+        pageNumber: field.pageNumber,
+      }));
+
+      await approveDocument(doc.id, autoplacements, approveComment);
+      setPlacements([]);
+      setPhase('idle');
+      setApproveComment('');
+      toast({ title: `Document approved with ${autoplacements.length} auto-placed signature${autoplacements.length > 1 ? 's' : ''}.` });
+    } catch {
+      toast({ title: 'Failed to approve document.', variant: 'destructive' });
+    } finally {
+      setAutoPlacing(false);
     }
   };
 
@@ -400,9 +450,27 @@ export default function DocumentReview() {
                 </div>
               )}
 
+              <div>
+                <label className="text-xs text-muted-foreground">Comment (optional)</label>
+                <textarea
+                  value={approveComment}
+                  onChange={(e) => setApproveComment(e.target.value)}
+                  placeholder="Add a remark or observation..."
+                  rows={2}
+                  maxLength={2000}
+                  className="mt-1 w-full rounded-lg border bg-card px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring/20 placeholder:text-muted-foreground"
+                />
+              </div>
+
               <div className="space-y-2">
+                {signatureFields.length > 0 && placements.length === 0 && (
+                  <Button className="w-full" onClick={handleAutoApprove} disabled={autoPlacing}>
+                    <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                    {autoPlacing ? 'Approving...' : `Approve Doc (${signatureFields.length} field${signatureFields.length > 1 ? 's' : ''} detected)`}
+                  </Button>
+                )}
                 <Button className="w-full" variant="outline" onClick={() => setPhase('gallery')}>
-                  <Pen className="h-4 w-4 mr-1.5" /> <span className="truncate">{placements.length > 0 ? 'Add Another Signature' : 'Place Signature & Approve'}</span>
+                  <Pen className="h-4 w-4 mr-1.5" /> <span className="truncate">{placements.length > 0 ? 'Add Another Signature' : 'Place Signature Manually'}</span>
                 </Button>
                 {placements.length > 0 && (
                   <Button className="w-full" onClick={handleConfirmSign}>

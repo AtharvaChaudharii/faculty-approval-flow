@@ -71,11 +71,11 @@ export function useDocuments() {
 
   const getDoc = useCallback((id: string) => docs.find(d => d.id === id), [docs]);
 
-  const approveDocument = useCallback(async (docId: string, placements: Placement[]) => {
+  const approveDocument = useCallback(async (docId: string, placements: Placement[], comment?: string) => {
     try {
       await fetchWithAuth(`/documents/${docId}/approve`, {
         method: 'POST',
-        body: JSON.stringify({ placements })
+        body: JSON.stringify({ placements, comment: comment || undefined })
       });
       refreshDocuments();
     } catch (err) {
