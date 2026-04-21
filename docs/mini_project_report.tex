@@ -1,0 +1,1309 @@
+\documentclass[12pt,a4paper]{report}
+
+% ── Packages ────────────────────────────────────────────────────────────────
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{tocloft}
+\usepackage{ragged2e}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{eso-pic}
+\usetikzlibrary{calc,arrows.meta,positioning,shapes.geometric}
+\usepackage{url}
+\usepackage{microtype}
+\setlength{\emergencystretch}{3em}
+\usepackage{float}
+\usepackage{mdframed}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage[normalem]{ulem} % for \sout (strikethrough)
+
+% ── Hyperlink setup ──────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    pdftitle={Mini Project Report - Notice Approval Management Platform},
+    pdfauthor={Atharva Chaudhari}
+}
+
+% ── Heading styles ───────────────────────────────────────────────────────────
+\titleformat{\chapter}[block]
+  {\normalfont\large\bfseries}{}{0em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{12pt}
+
+\titleformat{\section}
+  {\normalfont\normalsize\bfseries}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% ── Table colours ────────────────────────────────────────────────────────────
+\definecolor{headerblue}{RGB}{31,78,121}
+\definecolor{rowgray}{RGB}{222,234,241}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{citebg}{RGB}{240,248,255}
+\definecolor{citeborder}{RGB}{31,78,121}
+
+% ── Citation Box Style ───────────────────────────────────────────────────────
+\newtcolorbox{citebox}{
+  enhanced,
+  colback=citebg,
+  colframe=citeborder,
+  boxrule=0.8pt,
+  arc=4pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fontupper=\small,
+  breakable
+}
+
+% Inline citation tag command
+\newcommand{\citeref}[1]{%
+  \textcolor{citeborder}{%
+    \fboxsep=2pt%
+    \fcolorbox{citeborder}{citebg}{\footnotesize\bfseries[#1]}%
+  }%
+}
+
+% ── Line spacing ─────────────────────────────────────────────────────────────
+\setstretch{1.5}
+
+% ── List style ───────────────────────────────────────────────────────────────
+\setlist[itemize]{noitemsep, topsep=4pt, leftmargin=1.5em}
+\setlist[enumerate]{noitemsep, topsep=4pt, leftmargin=1.5em}
+
+% ── Page style ───────────────────────────────────────────────────────────────
+\usepackage{etoolbox}
+
+\fancypagestyle{mainstyle}{
+    \fancyhf{}
+    \rhead{\small DocFlow Mini Project Report}
+    \cfoot{\thepage}
+    \renewcommand{\headrulewidth}{0.4pt}
+}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \rhead{\small DocFlow Mini Project Report}
+    \cfoot{\thepage}
+    \renewcommand{\headrulewidth}{0.4pt}
+}
+
+\makeatletter
+\patchcmd{\chapter}{\thispagestyle{plain}}{\thispagestyle{mainstyle}}{}{}
+\makeatother
+
+% ── TOC style ────────────────────────────────────────────────────────────────
+\renewcommand{\contentsname}{Contents}
+\setlength{\cftbeforechapskip}{6pt}
+
+% ════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── COVER PAGE ───────────────────────────────────────────────────────────────
+\begin{titlepage}
+\centering
+\pagestyle{empty}
+
+\AddToShipoutPictureBG*{
+\begin{tikzpicture}[overlay,remember picture]
+% Outer border
+\draw[line width=2pt]
+    ([xshift=1cm,yshift=-1cm]current page.north west)
+    rectangle
+    ([xshift=-1cm,yshift=1cm]current page.south east);
+% Inner border
+\draw[line width=0.5pt]
+    ([xshift=1.3cm,yshift=-1.3cm]current page.north west)
+    rectangle
+    ([xshift=-1.3cm,yshift=1.3cm]current page.south east);
+\end{tikzpicture}
+}
+
+\vspace*{1.2cm}
+
+{\large\bfseries A}\\[0.1cm]
+{\large\bfseries WADL Mini Project Report On}\\[0.8cm]
+
+{\large ``DocFlow --- AI-Powered Notice Approval Management Platform''}\\[0.6cm]
+
+{\normalsize In partial fulfillment for the award of the Degree of}\\[0.2cm]
+{\normalsize\bfseries Bachelor of Engineering}\\[0.2cm]
+{\normalsize in}\\[0.2cm]
+{\normalsize\itshape Information Technology}\\[0.2cm]
+{\normalsize by}\\[0.8cm]
+
+{\normalsize\bfseries SUBMITTED BY}\\[0.3cm]
+\begin{tabular}{c c}
+\textbf{Roll no} & \textbf{Name} \\[0.15cm]
+33219 & Atharva Chaudhari \\
+33210 & Shreyas Bhor \\
+33234 & Advait Joshi \\
+33246 & Sahil Khandare \\
+\end{tabular}
+
+\vspace{1cm}
+
+{\large\bfseries Under the guidance of}\\[0.2cm]
+{\normalsize Dr. Girish P. Potdar}\\[0.6cm]
+
+\includegraphics[width=1.5in]{template_media/image1.jpeg}\\[0.8cm]
+
+{\normalsize\bfseries Department Of Information Technology}\\[0.15cm]
+{\normalsize\bfseries Pune Institute of Computer Technology College of Engineering}\\[0.1cm]
+{\normalsize Sr. No 27, Pune-Satara Road, Dhankawadi, Pune - 411 043.}\\[0.8cm]
+
+{\normalsize\bfseries ACADEMIC YEAR 2025--26}
+
+\end{titlepage}
+
+% ── CERTIFICATE ──────────────────────────────────────────────────────────────
+\newpage
+\pagestyle{empty}
+
+\AddToShipoutPictureBG*{
+\begin{tikzpicture}[overlay,remember picture]
+\draw[line width=2pt]
+    ($(current page.north west) + (1cm,-1cm)$)
+    rectangle
+    ($(current page.south east) + (-1cm,1cm)$);
+\end{tikzpicture}
+}
+
+\begin{center}
+
+\includegraphics[width=1in]{template_media/image1.jpeg}\\[0.3cm]
+
+{\large\bfseries DEPARTMENT OF INFORMATION TECHNOLOGY}\\
+{\large\bfseries SCTR's Pune Institute of Computer Technology}\\
+{\normalsize\bfseries Dhankawadi, Pune, Maharashtra 411043}\\[0.5cm]
+
+{\Large\bfseries CERTIFICATE}\\[0.6cm]
+
+\end{center}
+
+\begin{center}
+This is to certify that the Mini Project report entitled
+\end{center}
+
+\vspace{0.2cm}
+
+\begin{center}
+{\normalsize\bfseries ``DocFlow --- AI-Powered Notice Approval Management Platform for Educational Institutions''}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{center}
+Submitted by\\[0.2cm]
+\textit{Atharva Chaudhari}\\
+\textit{Roll No: 33219}
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+has satisfactorily completed the mini project under the guidance of \textbf{Dr. Girish P. Potdar} (Department of Information Technology, PICT) towards the partial fulfillment of Third Year Information Technology Semester VI, Academic Year 2025--26 of Savitribai Phule Pune University.
+
+\vspace{2cm}
+
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\textbf{Dr. Girish P. Potdar} & \hfill\textbf{Prof. (Dr.) Emmanuel M.}\\
+Project Guide & \hfill Head\\
+Department of Information Technology & \hfill Department of Information Technology\\
+                & \hfill PICT, Pune
+\end{tabular}
+
+\vspace{1cm}
+
+\noindent
+Place: Pune\\
+Date: \underline{\hspace{3cm}}
+
+% ── ABSTRACT ─────────────────────────────────────────────────────────────────
+\newpage
+\pagestyle{empty}
+\begin{center}
+{\large\bfseries ABSTRACT}
+\end{center}
+\vspace{0.3cm}
+
+Educational institutions in India continue to rely on manual, paper-based workflows for administrative approvals, leading to significant delays, lack of transparency, and no accountability trail. Documents such as leave applications, project proposals, event permissions, and budget requests must pass through multiple levels of authority --- from faculty to Head of Department to Principal to Director --- often requiring physical movement of files between offices.
+
+This mini project presents \textbf{DocFlow}, an AI-powered notice approval management platform that digitizes the entire document approval lifecycle. The platform enables faculty members to upload PDF documents, which are automatically analyzed by an AI engine (Groq LLM --- Llama 3.3 70B) to generate concise titles and summaries. Documents are then routed through a strict, validated hierarchical approval chain with sequential enforcement, ensuring that only the designated current approver can act at any given time.
+
+Key features of the system include: (i)~drag-and-drop digital signature placement with server-side signed PDF generation using \texttt{pdf-lib}, where the original document is never modified; (ii)~a six-template email notification system covering step advance, approval progress, full approval, AI-drafted rejection emails, chain updates, and automated 48-hour inactivity reminders via a \texttt{node-cron} background job; (iii)~role-based access control across five institutional roles with tailored UI rendering; (iv)~document versioning with revision support after rejection; and (v)~comprehensive, immutable audit logging of every action.
+
+The system is built using React 18 with TypeScript on the frontend, Node.js with Express on the backend, PostgreSQL managed through Prisma ORM for data persistence, and Cloudinary for immutable PDF storage. The application is containerized using Docker with multi-stage builds for production deployment.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} Document Approval System, Hierarchical Workflow, AI-Powered Analysis, Digital Signature, PDF Processing, Role-Based Access Control, Node.js, React, PostgreSQL, LLM Integration.
+
+% ── TABLE OF CONTENTS ────────────────────────────────────────────────────────
+\newpage
+\pagestyle{empty}
+\tableofcontents
+
+% ════════════════════════════════════════════════════════════════════════════
+% MAIN BODY
+% ════════════════════════════════════════════════════════════════════════════
+\newpage
+\setcounter{page}{1}
+\pagestyle{mainstyle}
+
+% ── Chapter 1: Introduction ──────────────────────────────────────────────────
+\chapter*{1.\quad Introduction}
+\addcontentsline{toc}{chapter}{1. Introduction}
+
+DocFlow is an AI-powered notice approval management platform designed specifically for educational institutions to replace manual, paper-based document approval workflows with a secure, structured, and transparent digital system \citeref{1}. The platform enables faculty members to upload PDF documents, which are then automatically analyzed by an AI engine \citeref{2} to generate titles and summaries. Documents are routed through a strict hierarchical approval chain --- Faculty $\rightarrow$ Assistant Professor $\rightarrow$ HOD $\rightarrow$ Principal $\rightarrow$ Director --- with drag-and-drop digital signature placement, immutable document storage, and comprehensive audit logging.
+
+The core philosophy of the platform is captured in three words: \textit{Simple. Sequential. Secure.} Every architectural and design decision was made in service of these principles. Faculty members should never need to manually track which authority needs to act next; the platform handles sequential routing automatically. Approvers should have a clean, unambiguous action center with a single ``Review \& Sign'' button when it is their turn. Administrators should have full audit visibility into every action taken on every document without data overload.
+
+This mini project was undertaken as part of the SPPU curriculum for Third Year Information Technology students (Semester VI), Academic Year 2025--26. The project was developed collaboratively by a team of students, each responsible for end-to-end implementation of specific feature modules spanning database design, backend APIs, AI integration, and frontend user interfaces.
+
+% ── 1.1 Application Flow ─────────────────────────────────────────────────────
+\section*{1.1\quad Application Flow}
+\addcontentsline{toc}{section}{1.1 Application Flow}
+
+The platform supports five distinct user roles, each with a dedicated flow through the application \citeref{1}. The following subsections describe the primary journey for each role.
+
+\subsection*{1.1.1\quad Faculty Document Submission}
+\addcontentsline{toc}{subsection}{1.1.1 Faculty Document Submission}
+
+A faculty member submits a document for approval through a guided multi-step process:
+
+\begin{enumerate}
+    \item The faculty member logs in and navigates to the \textbf{Upload Document} page from the sidebar.
+    \item A drag-and-drop upload zone accepts PDF files. Upon file selection, the document is immediately sent to the backend for \textbf{AI analysis} \citeref{2}.
+    \item The backend extracts text from the PDF using \texttt{pdf-parse}, sends it to the \textbf{Groq LLM API} (Llama 3.3 70B model), and returns an AI-generated title and summary.
+    \item The faculty member reviews and optionally edits the AI-generated title and summary, selects a document category (Academic, Financial, Administrative, Procurement, or General), and builds the \textbf{approval chain} by selecting approvers in hierarchical order.
+    \item The system enforces strict hierarchy: approvers must be selected in ascending rank order (Faculty $<$ Asst.\ Professor $<$ HOD $<$ Principal $<$ Director). The sender cannot be in their own approval chain.
+    \item Upon submission, the PDF is uploaded to \textbf{Cloudinary} \citeref{5} for immutable cloud storage, a database record is created with the approval chain, and the first approver is notified via email \citeref{6}.
+\end{enumerate}
+
+\subsection*{1.1.2\quad Approver Review \& Sign Flow}
+\addcontentsline{toc}{subsection}{1.1.2 Approver Review \& Sign Flow}
+
+An approver interacts with the platform through a structured three-panel review interface:
+
+\begin{enumerate}
+    \item The approver logs in and sees pending documents on the \textbf{Dashboard}, with an ``Action Required'' badge indicating documents awaiting their review.
+    \item Clicking a document opens the \textbf{Document Review Page}, which presents a three-column layout: AI Summary (left), PDF Viewer (center), and Signature Controls (right).
+    \item The approver can either use \textbf{Auto-Approve} (which detects signature fields in the PDF and auto-places signatures) or \textbf{Manual Placement} (selecting from their signature/stamp gallery and clicking on the PDF to place).
+    \item Placed signatures are draggable for repositioning and removable before final confirmation. The system requires at least one signature placement before approval is allowed.
+    \item Upon clicking ``Confirm \& Approve'', the system updates the approval step, creates an audit log entry, advances the chain to the next approver, and sends email notifications \citeref{6} --- all within a database transaction \citeref{3}.
+    \item If the approver chooses to \textbf{Reject}, a modal requires a rejection comment. The system generates an \textbf{AI-drafted rejection email} \citeref{2} body using the LLM, ensuring the tone is professional and empathetic.
+\end{enumerate}
+
+\subsection*{1.1.3\quad Document Revision Flow}
+\addcontentsline{toc}{subsection}{1.1.3 Document Revision Flow}
+
+When a document is rejected, the original sender can revise and resubmit:
+
+\begin{enumerate}
+    \item The sender sees a rejection banner on the Document Review Page with the approver's comment and an ``Upload Revision'' button.
+    \item Clicking the button opens a modal where the sender uploads a new PDF version.
+    \item The backend increments the document version number, replaces the file reference, deletes all existing signature placements, and resets all approval steps: the first approver is set to ``pending'' and all subsequent approvers to ``waiting''.
+    \item A new version history entry is created, an audit log records the revision, and the first approver is notified via email to review the revised document.
+    \item The complete version history is accessible from the Document Review Page via a collapsible panel.
+\end{enumerate}
+
+\subsection*{1.1.4\quad Director (Approve-Only) Flow}
+\addcontentsline{toc}{subsection}{1.1.4 Director (Approve-Only) Flow}
+
+The Director role has a restricted interface designed solely for approval:
+
+\begin{enumerate}
+    \item The Director logs in and lands on the Dashboard, which shows only documents where they are in the approval chain.
+    \item The \textbf{Upload Document} navigation item is hidden from the sidebar, and the upload route is inaccessible --- enforced both in the frontend (route guard) and backend (role guard middleware) \citeref{4}.
+    \item The ``Submitted by Me'' filter is hidden from the Dashboard since Directors do not submit documents.
+    \item The Director can approve, reject, and view documents exactly like other approvers.
+\end{enumerate}
+
+\subsection*{1.1.5\quad Bulk Approval Flow}
+\addcontentsline{toc}{subsection}{1.1.5 Bulk Approval Flow}
+
+For efficiency, the platform supports bulk actions on multiple documents:
+
+\begin{enumerate}
+    \item On the Dashboard, documents awaiting the user's action display selection checkboxes.
+    \item The user can select individual documents or use ``Select All'' to select all actionable documents.
+    \item Bulk ``Approve'' or ``Reject'' buttons process up to 20 documents simultaneously.
+    \item Each document is processed independently within its own database transaction, so failures in one do not affect others.
+    \item A summary toast notification reports the number of successes and failures.
+\end{enumerate}
+
+% ── 1.2 System Architecture ────────────────────────────────────────────────────
+\section*{1.2\quad System Architecture}
+\addcontentsline{toc}{section}{1.2 System Architecture}
+
+DocFlow is built on a layered, role-isolated architecture designed for institutional deployments. This section describes the core structural decisions that govern how data flows through the system, how users are separated, and how automation is handled.
+
+\subsection*{1.2.1\quad Technology Stack}
+\addcontentsline{toc}{subsection}{1.2.1 Technology Stack}
+
+The platform uses a modern, production-grade stack selected for developer productivity, AI integration support, and secure document handling.
+
+\begin{itemize}
+    \item \textbf{Frontend:} React 18 with TypeScript (Vite + SWC), TailwindCSS, Shadcn/ui component library, React Router v6 for SPA routing, TanStack React Query for data fetching, PDF.js for document rendering, and Recharts for analytics.
+    \item \textbf{Backend:} Node.js with Express 5 and TypeScript. Handles REST API endpoints, JWT-based authentication, role-based middleware, file upload processing via Multer, AI integration, background job scheduling, and email delivery \citeref{6}.
+    \item \textbf{Database:} PostgreSQL via Supabase \citeref{3}, managed through Prisma ORM \citeref{3} with type-safe queries across 7 relational models.
+    \item \textbf{AI Integration:} Groq API \citeref{2} using the Llama 3.3 70B Versatile model via OpenAI-compatible endpoints. Used for document title generation, summary generation, and AI-drafted rejection emails.
+    \item \textbf{Document Storage:} Cloudinary \citeref{5} for immutable PDF storage with CDN-accelerated delivery. All uploaded PDFs are stored as raw resources with signed URLs.
+    \item \textbf{PDF Processing:} \texttt{pdf-parse} for text extraction, \texttt{pdf-lib} \citeref{8} for server-side signature overlay and final signed PDF generation.
+    \item \textbf{Email Notifications:} Nodemailer with SMTP transport \citeref{6}. Styled HTML email templates for step advance, approval progress, full approval, rejection (with AI-drafted body), and inactivity reminders.
+    \item \textbf{Background Jobs:} \texttt{node-cron} \citeref{7} for hourly reminder automation. Detects documents idle for 48+ hours and sends automated reminder emails with spam prevention.
+\end{itemize}
+
+\subsection*{1.2.2\quad Data Model}
+\addcontentsline{toc}{subsection}{1.2.2 Data Model}
+
+The database schema reflects the sequential, hierarchical nature of the approval process \citeref{3}. Key entities are:
+
+\begin{itemize}
+    \item \textbf{User:} Stores \texttt{id}, \texttt{name}, \texttt{email}, \texttt{password} (bcrypt-hashed), \texttt{role} (faculty / assistant\_professor / hod / principal / director), \texttt{department}, and optional \texttt{avatar} and \texttt{profileImage}.
+    \item \textbf{Document:} Represents a submitted document. Contains \texttt{senderId}, \texttt{title}, \texttt{summary} (AI-generated), \texttt{status} (pending / approved / rejected / archived), \texttt{version} number, \texttt{category}, and \texttt{fileName} (Cloudinary URL).
+    \item \textbf{ApprovalStep:} Links a document to an approver at a specific position in the chain. Contains \texttt{orderIndex}, \texttt{status} (waiting / pending / approved / rejected), \texttt{actedAt} timestamp, optional \texttt{comment}, and \texttt{lastReminder} timestamp for cron spam prevention.
+    \item \textbf{Placement:} Records the precise position of a digital signature on a document page. Contains \texttt{approvalStepId}, \texttt{signatureId}, \texttt{signatureImage} (base64 data URL), \texttt{x}/\texttt{y} coordinates (percentage-based), and \texttt{pageNumber}.
+    \item \textbf{SignatureItem:} Stores a user's uploaded signature or stamp. Contains \texttt{name}, \texttt{type} (signature / stamp), and \texttt{preview} (base64 image data).
+    \item \textbf{AuditEntry:} Immutable log of every action on a document. Records \texttt{action} (submitted / approved / rejected / revised / archived / reminder\_sent), \texttt{actorId}, \texttt{timestamp}, optional \texttt{details}, and \texttt{version} number.
+    \item \textbf{DocumentVersion:} Tracks version history when documents are revised after rejection. Records \texttt{version} number, \texttt{fileName}, \texttt{uploadedAt}, and \texttt{uploadedBy}.
+\end{itemize}
+
+\subsection*{1.2.3\quad Hierarchical Approval Chain}
+\addcontentsline{toc}{subsection}{1.2.3 Hierarchical Approval Chain}
+
+A core feature of the platform is enforcing strict institutional hierarchy in the approval order \citeref{1}. When a faculty member builds an approval chain during document submission, the backend validates the chain using a role-rank mapping:
+
+\begin{center}
+\texttt{Faculty (0) < Asst.\ Professor (1) < HOD (2) < Principal (3) < Director (4)}
+\end{center}
+
+The validation ensures that each subsequent approver has a rank greater than or equal to the previous approver. If an out-of-order chain is submitted, the API returns a 400 error with a descriptive message. Additional validations prevent the sender from including themselves in the chain and reject duplicate approvers.
+
+The chain is strictly sequential: only one approval step is ``pending'' at any time. All subsequent steps remain in ``waiting'' status until their predecessor is approved. When a step is approved, the backend atomically advances the next step to ``pending'' and notifies the new approver via email \citeref{6}.
+
+\subsection*{1.2.4\quad Reminder Automation}
+\addcontentsline{toc}{subsection}{1.2.4 Reminder Automation}
+
+To prevent documents from stalling indefinitely, the platform runs an hourly background job using \texttt{node-cron} \citeref{7}. The job scans all approval steps that are in ``pending'' status where the associated document has been idle for more than 48 hours. For each stale step:
+
+\begin{enumerate}
+    \item A reminder email is sent to the pending approver.
+    \item The \texttt{lastReminder} timestamp is updated to prevent duplicate reminders within the same 48-hour window (spam prevention).
+    \item An audit entry of type \texttt{reminder\_sent} is created, recording the number of days of inactivity.
+\end{enumerate}
+
+\subsection*{1.2.5\quad Security Measures}
+\addcontentsline{toc}{subsection}{1.2.5 Security Measures}
+
+Security is enforced at multiple layers throughout the platform:
+
+\begin{itemize}
+    \item \textbf{Authentication:} JWT-based authentication with 7-day token expiry. Passwords are hashed using \texttt{bcryptjs}. The JWT secret is required at startup --- the server refuses to start without it \citeref{4}.
+    \item \textbf{Authorization:} Role-based middleware prevents Directors from uploading documents at the API level, not just the UI. Document access is scoped: only the sender and chain participants can view a document.
+    \item \textbf{Rate Limiting:} Login endpoint is limited to 20 attempts per 15-minute window. Upload endpoint is limited to 30 POST requests per 15-minute window \citeref{4}.
+    \item \textbf{Security Headers:} \texttt{X-Content-Type-Options: nosniff}, \texttt{X-Frame-Options: DENY} (except for PDF viewer endpoints), \texttt{X-XSS-Protection}, and \texttt{Referrer-Policy} are set on all responses.
+    \item \textbf{Document Immutability:} Original PDF files stored on Cloudinary are never modified. Signatures are stored as coordinate-based placements and overlaid dynamically during signed PDF generation using \texttt{pdf-lib} \citeref{8}.
+    \item \textbf{Archive Protection:} Approved and rejected documents cannot be modified further. The backend rejects any approval or rejection action on documents whose status is not ``pending''.
+    \item \textbf{Input Validation:} Comment length is capped at 2000 characters, signature placements are limited to 20 per approval action, and bulk actions are capped at 20 documents per request.
+\end{itemize}
+
+% ── Chapter 2: Problem Statement ─────────────────────────────────────────────
+\chapter*{2.\quad Problem Statement}
+\addcontentsline{toc}{chapter}{2. Problem Statement}
+
+Educational institutions in India continue to rely heavily on manual, paper-based workflows for administrative approvals \citeref{1}. Documents such as leave applications, project proposals, event permissions, budget requests, and official notices must pass through multiple levels of authority --- from faculty to HOD to principal to director --- often requiring physical movement of files between offices.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\caption{Key Problems and Their Impact}
+\begin{tabularx}{\textwidth}{|>{\bfseries}p{4.2cm}|X|}
+\hline
+\rowcolor{headerblue}
+\textcolor{white}{\textbf{Problem}} & \textcolor{white}{\textbf{Impact on Faculty \& Administration}} \\
+\hline
+\rowcolor{rowgray}
+Manual paper-based approvals & Physical movement of files between offices causes multi-day delays and logistical overhead. \\
+\hline
+Authorities unavailable & Approvals stall when the next authority is on leave or in meetings, with no fallback mechanism. \\
+\hline
+\rowcolor{rowgray}
+No status transparency & Faculty cannot determine whether their document has been received, is under review, or has been ignored. \\
+\hline
+No accountability trail \citeref{1} & There is no immutable record of who approved what and when, making compliance auditing impossible. \\
+\hline
+\rowcolor{rowgray}
+Document misplacement & Physical files can be lost, resulting in re-submission and duplicated effort. \\
+\hline
+No version control & When a document is returned for revision, there is no way to track changes between versions. \\
+\hline
+\rowcolor{rowgray}
+Manual signature verification & Verifying the authenticity of physical signatures is time-consuming and error-prone. \\
+\hline
+Email inbox clutter & Using email for approvals results in scattered conversations with no structured workflow. \\
+\hline
+\end{tabularx}
+\end{table}
+
+The specific engineering problems this project addresses are:
+
+\begin{itemize}
+    \item \textbf{Automated Document Analysis:} Faculty members spend time summarizing documents for approvers. The platform uses AI \citeref{2} to automatically extract text from PDFs and generate concise titles and summaries, reducing manual effort.
+    \item \textbf{Hierarchical Sequential Routing:} Documents must follow a strict institutional hierarchy. The platform enforces this at the API level, preventing out-of-order or skipped approvals.
+    \item \textbf{Digital Signature Placement:} Instead of physical signatures, the platform enables drag-and-drop placement of digital signatures directly onto PDF pages, with precise coordinate storage and on-demand overlay \citeref{8}.
+    \item \textbf{Immutable Audit Trail:} Every action --- submission, approval, rejection, revision, reminder --- is logged with actor identity, timestamp, and version number, creating a tamper-proof compliance record.
+    \item \textbf{Inactivity Detection:} Automated reminders ensure that no document silently stalls in the approval pipeline \citeref{7}.
+    \item \textbf{Role-Based Interface Differentiation:} Different roles need different UIs. Directors should not see upload options; faculty should not see other faculty's documents unless they are in the approval chain.
+\end{itemize}
+
+% ── Chapter 3: Objectives and Scope ──────────────────────────────────────────
+\chapter*{3.\quad Objectives and Scope}
+\addcontentsline{toc}{chapter}{3. Objectives and Scope}
+
+\section*{3.1\quad Objectives}
+\addcontentsline{toc}{section}{3.1 Objectives}
+
+The primary objective of this project is to design and develop a complete, production-grade web-based document approval management system for educational institutions that eliminates manual paper-based workflows. The specific objectives are:
+
+\begin{enumerate}
+    \item \textbf{Automate the Document Approval Lifecycle:} Build an end-to-end system that handles document submission, AI-powered analysis, hierarchical sequential approval, digital signing, rejection with revision support, and archival --- replacing the entire paper-based process with a structured digital workflow.
+
+    \item \textbf{Integrate AI for Intelligent Document Processing:} Leverage Large Language Model (LLM) technology \citeref{2} to automatically extract text from uploaded PDFs and generate concise, professional titles and summaries, reducing manual effort for faculty. Extend AI integration to generate empathetic, professional rejection email drafts.
+
+    \item \textbf{Enforce Institutional Hierarchy in Approvals:} Implement a strict hierarchical approval chain (Faculty $\rightarrow$ Asst.\ Professor $\rightarrow$ HOD $\rightarrow$ Principal $\rightarrow$ Director) with backend validation that prevents out-of-order, self-approval, or duplicate approver scenarios, ensuring compliance with institutional policy.
+
+    \item \textbf{Enable Digital Signature Placement on Documents:} Develop a drag-and-drop signature placement system that allows approvers to place their digital signatures and stamps directly on multi-page PDF documents, with server-side signed PDF generation \citeref{8} that preserves the original document's immutability.
+
+    \item \textbf{Provide Real-Time Transparency and Accountability:} Implement a comprehensive, immutable audit trail logging every action (submission, approval, rejection, revision, reminders) with actor identity, timestamp, and version number, enabling full compliance auditing and status visibility for all stakeholders.
+
+    \item \textbf{Automate Notifications and Reminders:} Develop a multi-template email notification system \citeref{6} that keeps all stakeholders informed at every stage, complemented by an automated background scheduler \citeref{7} that detects and reminds about stalled approvals.
+
+    \item \textbf{Implement Secure, Role-Based Access Control:} Design a security architecture with JWT authentication, bcrypt password hashing, rate limiting, security headers, and role-based access control \citeref{4} that differentiates five institutional roles at both the UI and API levels.
+
+    \item \textbf{Deliver a Production-Ready, Containerized Application:} Package the entire platform using Docker \citeref{9} with multi-stage builds for optimized, portable deployment on any server environment.
+\end{enumerate}
+
+\section*{3.2\quad Scope}
+\addcontentsline{toc}{section}{3.2 Scope}
+
+The scope of this project encompasses the complete design, development, testing, and containerized deployment of the DocFlow platform. The system covers the following functional and technical areas:
+
+\subsection*{Functional Scope}
+\addcontentsline{toc}{subsection}{Functional Scope}
+
+\begin{itemize}
+    \item \textbf{User Management:} Registration-free system with pre-seeded institutional users across five roles (Faculty, Assistant Professor, HOD, Principal, Director). Authentication via email/password with JWT-based session management.
+
+    \item \textbf{Document Submission:} PDF upload with drag-and-drop support, AI-powered title and summary generation, document categorization (Academic, Financial, Administrative, Procurement, General), and guided approval chain construction with hierarchy validation.
+
+    \item \textbf{Approval Workflow:} Sequential multi-level approval with strict ordering enforcement. Each approval step requires digital signature placement. Support for document rejection with mandatory comments, document revision with automatic chain reset, and bulk approval/rejection of up to 20 documents simultaneously.
+
+    \item \textbf{Digital Signatures:} Personal signature and stamp gallery management. Interactive drag-and-drop placement on multi-page PDFs with percentage-based coordinate storage. On-demand signed PDF generation that overlays all accumulated signatures onto the original immutable document.
+
+    \item \textbf{Notifications:} Six distinct email notification types triggered at every workflow state transition. Automated 48-hour inactivity reminders with spam prevention. Console-based email fallback for development environments.
+
+    \item \textbf{Audit and Compliance:} Immutable audit log recording every action with actor, timestamp, version, and details. Complete version history tracking for revised documents.
+
+    \item \textbf{Dashboard and Archive:} Real-time dashboard with statistics, multi-criteria filtering (status, category, search), and bulk selection. Searchable archive of completed documents with grid and list views.
+\end{itemize}
+
+\subsection*{Technical Scope}
+\addcontentsline{toc}{subsection}{Technical Scope}
+
+\begin{itemize}
+    \item \textbf{Frontend:} Single-page application with six pages (Login, Dashboard, Upload, Document Review, Archive, Settings), responsive sidebar layout, custom global state management, and interactive PDF viewer with signature overlay.
+
+    \item \textbf{Backend:} RESTful API with 12+ endpoints covering authentication, document CRUD, approval workflows, AI analysis, signature management, PDF generation, and bulk operations. Comprehensive middleware chain for security, rate limiting, and access control.
+
+    \item \textbf{Database:} Relational schema with 7 models (User, Document, ApprovalStep, Placement, SignatureItem, AuditEntry, DocumentVersion) managed through Prisma ORM \citeref{3} with transactional integrity.
+
+    \item \textbf{External Integrations:} Groq LLM API \citeref{2} for AI analysis, Cloudinary \citeref{5} for immutable PDF storage, Nodemailer for SMTP email delivery \citeref{6}.
+
+    \item \textbf{Infrastructure:} Docker containerization \citeref{9} with multi-stage builds for both frontend (Nginx) and backend (Node.js) services. Environment-based configuration with documented templates.
+\end{itemize}
+
+\subsection*{Limitations}
+\addcontentsline{toc}{subsection}{Limitations}
+
+\begin{itemize}
+    \item The system currently supports PDF documents only; other file formats (Word, images) are not accepted.
+    \item AI analysis relies on text-extractable PDFs; scanned/image-based PDFs receive a filename-based fallback instead of AI-generated summaries.
+    \item The platform does not include cryptographic digital signatures (e.g., PKI-based); signatures are image-based overlays for visual identification.
+    \item Real-time push notifications (WebSocket) are not implemented; users must refresh or rely on email notifications for updates.
+\end{itemize}
+
+% ── Chapter 4: System Architecture and Data Flow ─────────────────────────────
+\chapter*{4.\quad System Architecture and Data Flow}
+\addcontentsline{toc}{chapter}{4. System Architecture and Data Flow}
+
+The DocFlow platform follows a three-tier architecture comprising a React-based frontend, a Node.js/Express backend API server, and a PostgreSQL relational database \citeref{3} managed through Prisma ORM.
+
+\vspace{0.5cm}
+
+% Architecture Diagram using TikZ
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, draw, rounded corners=6pt, minimum width=3.2cm, minimum height=1cm, align=center, font=\small},
+  cloud/.style={rectangle, draw=citeborder, rounded corners=6pt, minimum width=2.8cm, minimum height=0.9cm, align=center, font=\small\color{citeborder}},
+  arrow/.style={->, >=stealth, thick},
+  label/.style={font=\footnotesize, color=gray}
+]
+
+% Tier 1 - Frontend
+\node[box, fill=rowgray] (react) at (0, 6) {React + TypeScript\\(Vite, SWC)};
+\node[box, fill=rowgray] (router) at (0, 4) {React Router v6\\(Auth Guards)};
+\node[box, fill=rowgray] (ctx) at (0, 2) {Auth Store\\Document Store};
+
+% Tier 2 - Backend
+\node[box, fill=rowgray] (express) at (6, 6) {Node.js\\Express.js API};
+\node[box, fill=rowgray] (mw) at (6, 4) {Middleware\\(JWT, RBAC, Rate)};
+\node[box, fill=rowgray] (ai) at (6, 2) {Groq LLM\\AI Analysis};
+
+% Tier 3 - Data
+\node[box, fill=rowgray] (prisma) at (12, 6) {Prisma ORM\\(Type-Safe)};
+\node[box, fill=rowgray] (pg) at (12, 4) {PostgreSQL\\(7 Models)};
+\node[cloud] (cdn) at (12, 2) {Cloudinary\\(PDF CDN)};
+
+% Tier Labels
+\node[font=\bfseries\small] at (0, 7.2) {Frontend Layer};
+\node[font=\bfseries\small] at (6, 7.2) {Backend Layer};
+\node[font=\bfseries\small] at (12, 7.2) {Data Layer};
+
+% Arrows - Frontend to Backend
+\draw[arrow] (react) -- node[above=6pt, label]{HTTP / REST} (express);
+\draw[arrow] (ctx) to[bend left=10] node[below=6pt, label]{JWT Bearer} (ai);
+
+% Arrows - Backend to Data
+\draw[arrow] (express) -- (prisma);
+\draw[arrow] (mw) -- (pg);
+\draw[arrow] (express) to[bend left=10] node[above=6pt, label]{Upload} (cdn);
+
+% Internal arrows
+\draw[arrow] (react) -- (router);
+\draw[arrow] (router) -- (ctx);
+\draw[arrow] (express) -- (mw);
+\draw[arrow] (mw) -- (ai);
+\draw[arrow] (prisma) -- (pg);
+
+\end{tikzpicture}
+\caption{DocFlow --- Three-Tier System Architecture}
+\end{figure}
+
+\subsubsection*{How the Three-Tier Architecture Works}
+\addcontentsline{toc}{subsubsection}{How the Three-Tier Architecture Works}
+
+The diagram illustrates the end-to-end request flow across three layers. In the \textbf{Frontend Layer}, the user interacts with the React + TypeScript application (bundled via Vite/SWC). Navigation between pages is managed by React Router v6 using auth guards that redirect unauthenticated users and role-restricted route guards that prevent Directors from accessing the upload page. Global state --- authentication tokens and document data --- is maintained in custom external stores (\texttt{auth-store} and \texttt{document-store}) using React's \texttt{useSyncExternalStore} hook for efficient re-rendering.
+
+When the user performs an action (uploading a document, approving a ticket), the frontend sends an \textbf{HTTP/REST} request to the \textbf{Backend Layer}. The Node.js/Express API server receives the request and passes it through the middleware chain: JWT verification (extracting user identity from the token), role-based access control (ensuring the user's role permits the action), and rate limiting (preventing abuse of login and upload endpoints) \citeref{4}.
+
+The \textbf{Data Layer} sits behind the backend exclusively. Prisma ORM \citeref{3} translates application-level queries into type-safe PostgreSQL operations across 7 relational models. PDF documents bypass the relational database and are pushed directly to \textbf{Cloudinary} \citeref{5} via Multer storage integration, with only the returned CDN URL stored in PostgreSQL.
+
+\vspace{0.3cm}
+
+% Role Architecture Diagram
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  role/.style={rectangle, draw, rounded corners=4pt, minimum width=2.6cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+  page/.style={rectangle, draw=gray, rounded corners=2pt, minimum width=2.6cm, minimum height=0.6cm, align=center, font=\footnotesize}
+]
+
+% Roles (Top)
+\node[role, fill=rowgray] (faculty) at (0,0) {Faculty};
+\node[role, fill=rowgray] (asstprof) at (3.5,0) {Asst.\ Professor};
+\node[role, fill=rowgray] (hod) at (7,0) {HOD};
+\node[role, fill=rowgray] (principal) at (10.5,0) {Principal};
+\node[role, fill=rowgray] (director) at (14,0) {Director};
+
+% Faculty/Asst Prof/HOD/Principal Pages (Same)
+\node[page] at (0,-1.5) {Dashboard};
+\node[page] at (0,-2.3) {Upload Document};
+\node[page] at (0,-3.1) {Document Review};
+\node[page] at (0,-3.9) {Archive};
+\node[page] at (0,-4.7) {Profile/Signatures};
+
+\node[page] at (3.5,-1.5) {Dashboard};
+\node[page] at (3.5,-2.3) {Upload Document};
+\node[page] at (3.5,-3.1) {Document Review};
+\node[page] at (3.5,-3.9) {Archive};
+\node[page] at (3.5,-4.7) {Profile/Signatures};
+
+\node[page] at (7,-1.5) {Dashboard};
+\node[page] at (7,-2.3) {Upload Document};
+\node[page] at (7,-3.1) {Document Review};
+\node[page] at (7,-3.9) {Archive};
+\node[page] at (7,-4.7) {Profile/Signatures};
+
+\node[page] at (10.5,-1.5) {Dashboard};
+\node[page] at (10.5,-2.3) {Upload Document};
+\node[page] at (10.5,-3.1) {Document Review};
+\node[page] at (10.5,-3.9) {Archive};
+\node[page] at (10.5,-4.7) {Profile/Signatures};
+
+% Director Pages (Restricted)
+\node[page] at (14,-1.5) {Dashboard};
+\node[page, draw=red!50, text=red!70] at (14,-2.3) {\sout{Upload} (Hidden)};
+\node[page] at (14,-3.1) {Document Review};
+\node[page] at (14,-3.9) {Archive};
+\node[page] at (14,-4.7) {Profile/Signatures};
+
+\end{tikzpicture}
+\caption{Role-Based Page Access Map (Director upload is restricted)}
+\end{figure}
+
+\vspace{0.5cm}
+
+% ── Document Lifecycle Flow Diagram ──────────────────────────────────────────
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.2cm and 2cm,
+  process/.style={rectangle, draw, rounded corners=4pt, minimum width=2.8cm, minimum height=0.9cm, align=center, font=\small, fill=rowgray},
+  decision/.style={diamond, draw, minimum width=2cm, minimum height=1cm, align=center, font=\small, fill=yellow!15, aspect=2},
+  startstop/.style={rectangle, draw, rounded corners=12pt, minimum width=2.2cm, minimum height=0.8cm, align=center, font=\small\bfseries, fill=headerblue, text=white},
+  arrow/.style={-{Stealth[length=3mm]}, thick},
+  label/.style={font=\scriptsize, color=gray}
+]
+
+% Start
+\node[startstop] (start) {Faculty Upload};
+
+% AI Analysis
+\node[process, below=of start] (ai) {AI Analysis\\(Groq LLM)};
+
+% Chain Build
+\node[process, below=of ai] (chain) {Build Approval\\Chain};
+
+% Submit
+\node[process, below=of chain] (submit) {Submit \&\\Notify};
+
+% Pending
+\node[process, below=of submit] (pending) {Status: Pending\\Awaiting Approver};
+
+% Decision
+\node[decision, below=1.5cm of pending] (decide) {Approver\\Decision?};
+
+% Approve Path
+\node[process, left=2.5cm of decide] (approve) {Approve\\+ Sign};
+
+% Reject Path
+\node[process, right=2.5cm of decide] (reject) {Reject\\+ Comment};
+
+% More Approvers?
+\node[decision, below=1.5cm of approve] (more) {More in\\Chain?};
+
+% Final Approval
+\node[startstop, below left=1.5cm and 0cm of more] (done) {Fully Approved\\(Archived)};
+
+% Next Approver
+\node[process, below right=1.5cm and 0cm of more] (next) {Advance to\\Next Approver};
+
+% Revision
+\node[process, below=1.5cm of reject] (revise) {Sender Revises\\New Version};
+
+% Arrows
+\draw[arrow] (start) -- (ai);
+\draw[arrow] (ai) -- (chain);
+\draw[arrow] (chain) -- (submit);
+\draw[arrow] (submit) -- (pending);
+\draw[arrow] (pending) -- (decide);
+\draw[arrow] (decide) -- node[above, label] {Approve} (approve);
+\draw[arrow] (decide) -- node[above, label] {Reject} (reject);
+\draw[arrow] (approve) -- (more);
+\draw[arrow] (more) -- node[left, label] {No} (done);
+\draw[arrow] (more) -- node[right, label] {Yes} (next);
+\draw[arrow] (next.east) to[bend left=60] (pending.east);
+\draw[arrow] (reject) -- (revise);
+\draw[arrow] (revise.west) to[bend right=60] node[left, label] {Reset Chain} (pending.west);
+
+\end{tikzpicture}
+\caption{Document Lifecycle --- End-to-End Approval Flow}
+\end{figure}
+
+\subsubsection*{Document Lifecycle Explained}
+\addcontentsline{toc}{subsubsection}{Document Lifecycle Explained}
+
+The diagram above illustrates the complete lifecycle of a document from submission to final approval or revision.
+
+\vspace{0.2cm}
+
+\noindent\textbf{Stage 1 --- Faculty Upload \& AI Analysis (Top Nodes)}
+
+A faculty member uploads a PDF file. The backend immediately extracts text using \texttt{pdf-parse} and sends it to the Groq LLM API \citeref{2} for AI analysis. The LLM returns a concise title (max 60 characters) and a 2--3 sentence summary. If the PDF is image-based (scanned) with insufficient extractable text, the system falls back to filename-based title/summary generation.
+
+\vspace{0.2cm}
+
+\noindent\textbf{Stage 2 --- Chain Building \& Submission}
+
+The faculty member reviews the AI-generated metadata, selects a category, and builds the approval chain by selecting approvers in hierarchical order. The backend validates the chain against the role-rank hierarchy and rejects out-of-order chains. Upon submission, the PDF is uploaded to Cloudinary \citeref{5}, database records are created (Document, ApprovalSteps, AuditEntry, DocumentVersion), and the first approver receives an email notification \citeref{6}.
+
+\vspace{0.2cm}
+
+\noindent\textbf{Stage 3 --- Approval Decision (Diamond Node)}
+
+The current approver reviews the document in the three-panel interface, places their digital signature(s) on the PDF, and either approves or rejects. This decision point produces two branches:
+
+\begin{itemize}
+    \item \textbf{Approve Path (left):} The approval step is marked ``approved'' with timestamp, signature placements are saved, and an audit entry is created --- all within a database transaction \citeref{3}. If more approvers remain in the chain, the next step advances to ``pending'' and the next approver is notified. If this was the final approver, the document status changes to ``approved'' and the sender receives a completion email.
+    \item \textbf{Reject Path (right):} The approval step is marked ``rejected'' with the approver's comment, the document status changes to ``rejected'', and an AI-drafted rejection email \citeref{2} is generated and sent to the sender. The sender can then upload a revised version, which resets the entire approval chain (all steps back to waiting, first step to pending) and increments the version number.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{Stage 4 --- Email Notification Pipeline}
+
+At each status transition, the platform fires contextual email notifications \citeref{6}:
+\begin{itemize}
+    \item \textbf{Step Advance:} Next approver notified with document title and sender name.
+    \item \textbf{Approval Progress:} Sender receives a progress update with a visual progress bar showing X of Y approvals complete.
+    \item \textbf{Chain Update:} All previous approvers notified about the latest approval with a verification status list.
+    \item \textbf{Full Approval:} Sender notified that the document is fully approved and archived.
+    \item \textbf{Rejection:} Sender receives an AI-drafted empathetic email with the rejection comment.
+    \item \textbf{Reminder:} Automated hourly cron \citeref{7} sends reminders after 48 hours of inactivity.
+\end{itemize}
+
+\vspace{0.5cm}
+
+% ── Signed PDF Generation Flow ───────────────────────────────────────────────
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.2cm,
+  process/.style={rectangle, draw, rounded corners=4pt, minimum width=3cm, minimum height=0.8cm, align=center, font=\small, fill=rowgray},
+  arrow/.style={-{Stealth[length=3mm]}, thick},
+  label/.style={font=\scriptsize, color=gray}
+]
+
+\node[process] (fetch) {Fetch Original PDF\\from Cloudinary};
+\node[process, below=of fetch] (load) {Load into pdf-lib\\PDFDocument};
+\node[process, below=of load] (embed) {Embed Fonts\\(Helvetica, Bold)};
+\node[process, below=of embed] (loop) {For Each Approved Step:\\Overlay Signatures};
+\node[process, below=of loop] (coords) {Convert \% Coords\\to Absolute Position};
+\node[process, below=of coords] (image) {Embed Signature Image\\or Draw Text Fallback};
+\node[process, below=of image] (save) {Save \& Stream\\Merged PDF};
+
+\draw[arrow] (fetch) -- (load);
+\draw[arrow] (load) -- (embed);
+\draw[arrow] (embed) -- (loop);
+\draw[arrow] (loop) -- (coords);
+\draw[arrow] (coords) -- (image);
+\draw[arrow] (image) -- (save);
+
+\end{tikzpicture}
+\caption{Dynamic Signed PDF Generation Pipeline \citeref{8}}
+\end{figure}
+
+\subsubsection*{Signed PDF Generation: How It Works}
+\addcontentsline{toc}{subsubsection}{Signed PDF Generation: How It Works}
+
+A critical feature of DocFlow is that the \textbf{original PDF file is never modified} \citeref{5}. Signatures are stored as coordinate-based placements in the database. When a user downloads the signed PDF, the backend dynamically generates it on demand:
+
+\begin{enumerate}
+    \item The original PDF is fetched from Cloudinary and loaded into a \texttt{pdf-lib} \citeref{8} \texttt{PDFDocument} instance.
+    \item Standard fonts (Helvetica and Helvetica-Bold) are embedded for text-based fallback signatures.
+    \item For each approved step in the approval chain, the system iterates through the signature placements.
+    \item Percentage-based coordinates (stored as 0--100 values) are converted to absolute PDF coordinates using the page dimensions. PDF coordinates use a bottom-up origin, so the Y-axis is inverted.
+    \item If the placement includes a base64 signature image, it is decoded and embedded as a PNG or JPEG image, scaled to fit within a 120×60 pixel bounding box while preserving aspect ratio.
+    \item If no image is available, a styled text-based signature box is drawn with the approver's name, role, and date.
+    \item The merged PDF is serialized and streamed to the client with appropriate headers for inline display.
+\end{enumerate}
+
+% ── Chapter 5: Methodology ───────────────────────────────────────────────────
+\chapter*{5.\quad Methodology}
+\addcontentsline{toc}{chapter}{5. Methodology}
+
+This chapter describes the methodology adopted for the development of the DocFlow platform, organized by the web technologies used, the frontend and backend development approaches, and the integration strategies employed to unify the system.
+
+% ── 5.1 Web Technologies Used ────────────────────────────────────────────────
+\section*{5.1\quad Web Technologies Used}
+\addcontentsline{toc}{section}{5.1 Web Technologies Used}
+
+The DocFlow platform is built using a modern web technology stack chosen for type safety, developer productivity, scalable architecture, and seamless AI integration. The technologies span three tiers --- client, server, and data --- and are summarized below.
+
+\renewcommand{\arraystretch}{1.3}
+\begin{table}[H]
+\centering
+\caption{Core Web Technologies and Their Roles}
+\small
+\begin{tabularx}{\textwidth}{|p{2.8cm}|p{3.8cm}|X|}
+\hline
+\rowcolor{headerblue}
+\textcolor{white}{\textbf{Layer}} & \textcolor{white}{\textbf{Technology}} & \textcolor{white}{\textbf{Role in DocFlow}} \\
+\hline
+\rowcolor{rowgray}
+UI Framework & React 18 + TypeScript & Component-driven SPA with type-safe props, hooks, and state management \\
+\hline
+Build Toolchain & Vite + SWC & Sub-second HMR during development; optimized production bundling with tree-shaking \\
+\hline
+\rowcolor{rowgray}
+Styling & Tailwind CSS + Shadcn/ui & Utility-first CSS with accessible, pre-built components (Dialog, Sheet, Toast, ScrollArea) \\
+\hline
+Client Routing & React Router v6 & SPA navigation with \texttt{AuthGuard} and \texttt{ProtectedUpload} route wrappers \\
+\hline
+\rowcolor{rowgray}
+PDF Rendering & PDF.js (react-pdf) & Client-side multi-page PDF viewing with click-to-place and overlay support \\
+\hline
+Server Runtime & Node.js + Express 5 & REST API server with middleware chain, rate limiting, and security headers \citeref{4} \\
+\hline
+\rowcolor{rowgray}
+ORM & Prisma & Type-safe queries, migrations, relational mapping across 7 models, and transactions \citeref{3} \\
+\hline
+Database & PostgreSQL (Supabase) & Relational storage for users, documents, approval chains, signatures, audit logs \citeref{3} \\
+\hline
+\rowcolor{rowgray}
+File Storage & Cloudinary + Multer & Immutable PDF storage with CDN delivery; multipart upload handling \citeref{5} \\
+\hline
+AI / LLM & Groq API (Llama 3.3 70B) & Document analysis (title/summary) and AI-drafted rejection emails \citeref{2} \\
+\hline
+\rowcolor{rowgray}
+PDF Manipulation & pdf-lib + pdf-parse & Text extraction for AI; server-side signature overlay and signed PDF generation \citeref{8} \\
+\hline
+Authentication & JWT + bcryptjs & Stateless auth tokens (7-day expiry) with password hashing \\
+\hline
+\rowcolor{rowgray}
+Email & Nodemailer (SMTP) & 6 styled HTML email templates with console fallback \citeref{6} \\
+\hline
+Scheduler & node-cron & Hourly background job for 48-hour inactivity reminders \citeref{7} \\
+\hline
+\rowcolor{rowgray}
+Containerization & Docker (multi-stage) & Nginx-based frontend and Node.js backend containers \citeref{9} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Why These Technologies:}
+\begin{itemize}
+    \item \textbf{TypeScript end-to-end:} Using TypeScript on both frontend (React) and backend (Express) eliminates an entire class of runtime errors and enables shared type definitions between the API and UI layers.
+    \item \textbf{Prisma ORM over raw SQL:} Prisma \citeref{3} provides auto-generated TypeScript types from the database schema, ensuring that any schema change is immediately reflected as a compile-time error in the application code. Its transaction API (\texttt{prisma.\$transaction}) is critical for atomic approval workflows.
+    \item \textbf{Cloudinary over local storage:} Storing PDFs on Cloudinary \citeref{5} ensures immutability (the original file is never modified), CDN-accelerated delivery for PDF viewing, and decoupled storage from the application server --- enabling horizontal scaling.
+    \item \textbf{Groq over OpenAI:} The Groq API \citeref{2} was chosen for its free tier availability and extremely low latency inference on the Llama 3.3 70B model, making real-time document analysis feasible without cost overhead.
+    \item \textbf{pdf-lib for signature overlay:} Unlike annotation-based approaches, \texttt{pdf-lib} \citeref{8} enables pixel-precise embedding of PNG/JPEG signature images directly into the PDF page content stream, producing a single merged output with no external dependencies.
+\end{itemize}
+
+% ── 5.2 Frontend Development ────────────────────────────────────────────────
+\section*{5.2\quad Frontend Development}
+\addcontentsline{toc}{section}{5.2 Frontend Development}
+
+The frontend is a single-page application built with React 18 and TypeScript, bundled via Vite with SWC for fast compilation. It implements six core pages, a shared application layout with sidebar navigation and notification system, and custom global state management using React's \texttt{useSyncExternalStore} hook.
+
+\subsection*{5.2.1\quad Application Structure \& Routing}
+\addcontentsline{toc}{subsection}{5.2.1 Application Structure \& Routing}
+
+The application entry point (\texttt{App.tsx}) configures React Router v6 with the following route structure:
+
+\begin{itemize}
+    \item \texttt{/login} --- Public login page (no layout wrapper).
+    \item \texttt{/} --- Dashboard (wrapped in \texttt{AuthGuard} + \texttt{AppLayout}).
+    \item \texttt{/upload} --- Upload Document (wrapped in \texttt{ProtectedUpload}, which additionally blocks Directors via role check).
+    \item \texttt{/document/:id} --- Document Review page with three-panel layout.
+    \item \texttt{/archive} --- Archive browser for approved/completed documents.
+    \item \texttt{/settings} --- Profile \& Signatures management page.
+\end{itemize}
+
+The \texttt{AuthGuard} component checks the current user from the auth store and redirects to \texttt{/login} if unauthenticated. The \texttt{ProtectedUpload} component adds an additional role-based guard, redirecting Directors to the dashboard.
+
+\subsection*{5.2.2\quad State Management}
+\addcontentsline{toc}{subsection}{5.2.2 State Management}
+
+Instead of using a third-party state management library (Redux, Zustand), the application implements two custom external stores:
+
+\begin{itemize}
+    \item \textbf{Auth Store (\texttt{auth-store.ts}):} Manages the current user object and JWT token. Provides \texttt{loginByEmail()}, \texttt{logout()}, and \texttt{checkSession()} functions. On page load, it validates the existing token via \texttt{GET /api/auth/me}. The store uses a listener-based subscription pattern with \texttt{useSyncExternalStore} for React integration, ensuring re-renders only when the user state actually changes.
+    \item \textbf{Document Store (\texttt{document-store.ts}):} Manages the list of all documents visible to the current user. Provides \texttt{approveDocument()}, \texttt{rejectDocument()}, \texttt{reviseDocument()}, \texttt{submitDocument()}, and \texttt{bulkAction()} functions, each of which calls the respective API endpoint and triggers a full document refresh on success. Auto-fetches documents on first access if not already loaded.
+\end{itemize}
+
+\subsection*{5.2.3\quad Key Frontend Features}
+\addcontentsline{toc}{subsection}{5.2.3 Key Frontend Features}
+
+\begin{itemize}
+    \item \textbf{Dashboard (\texttt{Dashboard.tsx}):} Displays four stats cards (Action Required, Pending, Approved, Rejected), a tabbed filter bar (All, Action Required, Submitted by Me, Pending, Approved, Rejected), a category sub-filter, a search bar, and a document list with bulk selection checkboxes. Directors see a reduced filter set (no ``Submitted by Me''). Loading states render skeleton placeholders. Error states show retry buttons.
+
+    \item \textbf{Upload Document Wizard (\texttt{UploadDocument.tsx}):} A three-step flow: (1) Drag-and-drop PDF upload zone, (2) AI analysis loading state with a spinner, (3) Chain builder with editable AI title/summary, category selector, and a searchable approver list. The approver list enforces hierarchy: after selecting a higher-ranked approver, lower-ranked users are locked with a lock icon. Selected approvers display numbered badges showing their position in the chain.
+
+    \item \textbf{Document Review (\texttt{DocumentReview.tsx}):} A three-column layout:
+    \begin{itemize}
+        \item \textbf{Left panel:} AI-generated summary and the approval chain visualization with avatar, role label, timestamp, and rejection comments.
+        \item \textbf{Center panel:} A \texttt{PdfViewer} component rendering the PDF via PDF.js with multi-page navigation. Signature overlays are rendered as absolute-positioned \texttt{div} elements on top of the PDF pages. Existing approvals show green-bordered signature boxes; active placements show dashed blue borders and are draggable.
+        \item \textbf{Right panel:} Action controls for the current approver (signature placement buttons, comment textarea, Confirm \& Approve, Reject), document details (category, version, dates), collapsible version history, and collapsible audit log.
+    \end{itemize}
+
+    \item \textbf{Signature Placement System:} When the user clicks ``Place Signature Manually'', a \texttt{Sheet} (slide-over panel) opens showing the user's signature/stamp gallery. After selecting a signature, the PDF viewer enters ``placing'' mode with a crosshair cursor. Clicking on the PDF converts the click position to percentage-based coordinates (\texttt{(clientX - rect.left) / rect.width * 100}). Placed signatures are draggable via \texttt{onMouseDown}/\texttt{onMouseMove}/\texttt{onMouseUp} event handlers with offset tracking. Each placement can be removed via a hover-revealed delete button.
+
+    \item \textbf{Auto-Approve:} The frontend fetches detected signature field positions from \texttt{GET /api/documents/:id/signature-fields} on page load. If fields are detected, an ``Approve Doc (N fields detected)'' button is shown, which creates placements at all detected positions and submits the approval in a single action.
+
+    \item \textbf{Archive (\texttt{Archive.tsx}):} A filterable, searchable browser for approved and archived documents with toggle between grid (card) and list (row) views. Each card shows the document title, summary, sender, date, version, and a progress bar representing the completed approval chain.
+
+    \item \textbf{Settings (\texttt{SettingsPage.tsx}):} Displays the user's profile information (name, email, role, department) with a profile photo upload/remove feature. Below the profile, a signature and stamp gallery allows uploading PNG/JPEG/SVG images as signatures or stamps, with preview thumbnails and per-item delete buttons.
+
+    \item \textbf{App Layout (\texttt{AppLayout.tsx}):} A responsive sidebar layout with a 264px sidebar (collapsible on mobile via hamburger menu), navigation items (with role-based hiding for Directors), a breadcrumb header, and a notification bell that shows a dropdown list of documents awaiting the user's action.
+\end{itemize}
+
+\subsection*{5.2.4\quad Frontend Containerization}
+\addcontentsline{toc}{subsection}{5.2.4 Frontend Containerization}
+
+The frontend is containerized using a two-stage Docker build \citeref{9}:
+
+\begin{enumerate}
+    \item \textbf{Stage 1 (Builder):} Uses \texttt{node:20-alpine} to install dependencies, inject the \texttt{VITE\_API\_URL} build argument as an environment variable, and run \texttt{npm run build} to produce optimized static assets in \texttt{/app/dist}.
+    \item \textbf{Stage 2 (Production):} Uses \texttt{nginx:alpine} to serve the compiled assets. A custom Nginx configuration enables SPA routing via \texttt{try\_files \$uri \$uri/ /index.html}, ensuring that all client-side routes (e.g., \texttt{/document/abc123}) resolve to \texttt{index.html} rather than returning 404.
+\end{enumerate}
+
+% ── 5.3 Backend Development ─────────────────────────────────────────────────
+\section*{5.3\quad Backend Development}
+\addcontentsline{toc}{section}{5.3 Backend Development}
+
+The backend is a Node.js application built with Express 5 and TypeScript. It exposes a RESTful API consumed by the React frontend and handles authentication, document management, approval workflows, AI integration, email notifications, and background job scheduling.
+
+\subsection*{5.3.1\quad Server Configuration \& Middleware}
+\addcontentsline{toc}{subsection}{5.3.1 Server Configuration \& Middleware}
+
+The Express server (\texttt{server.ts}) configures a layered middleware chain \citeref{4}:
+
+\begin{enumerate}
+    \item \textbf{CORS:} Configured with multiple allowed origins for development and production environments.
+    \item \textbf{Security Headers:} \texttt{X-Content-Type-Options: nosniff}, \texttt{X-Frame-Options: DENY} (with a PDF-path exception for iframe embedding), \texttt{X-XSS-Protection: 1; mode=block}, and \texttt{Referrer-Policy: strict-origin-when-cross-origin}.
+    \item \textbf{Body Parsing:} JSON and URL-encoded bodies with a 50MB limit to accommodate large PDF uploads.
+    \item \textbf{Rate Limiting:} Two rate limiters --- login endpoint (20 requests per 15-minute window) and upload endpoint (30 POST requests per 15-minute window) --- both using \texttt{express-rate-limit}.
+    \item \textbf{JWT Authentication Middleware:} Extracts the Bearer token from the \texttt{Authorization} header, verifies it using the \texttt{JWT\_SECRET}, and attaches the decoded user payload (\texttt{id}, \texttt{email}, \texttt{role}, \texttt{name}) to \texttt{req.user}. The server refuses to start if \texttt{JWT\_SECRET} is not set.
+\end{enumerate}
+
+\subsection*{5.3.2\quad Database Schema \& ORM}
+\addcontentsline{toc}{subsection}{5.3.2 Database Schema \& ORM}
+
+The PostgreSQL database is managed through Prisma ORM \citeref{3} with 7 relational models:
+
+\begin{itemize}
+    \item \textbf{User} $\rightarrow$ has many \textbf{Documents} (as sender), many \textbf{ApprovalSteps} (as approver), many \textbf{SignatureItems}.
+    \item \textbf{Document} $\rightarrow$ has many \textbf{ApprovalSteps} (ordered chain), many \textbf{AuditEntries}, many \textbf{DocumentVersions}.
+    \item \textbf{ApprovalStep} $\rightarrow$ has many \textbf{Placements} (signature positions on the PDF).
+    \item \textbf{Placement} $\rightarrow$ stores \texttt{x}, \texttt{y} (percentage coordinates), \texttt{pageNumber}, \texttt{signatureId}, and \texttt{signatureImage} (base64).
+\end{itemize}
+
+All multi-step approval operations (approve, reject, revise) use Prisma's \texttt{\$transaction} API to ensure atomicity. If any step within a transaction fails, all changes are rolled back automatically.
+
+\subsection*{5.3.3\quad Core API Routes}
+\addcontentsline{toc}{subsection}{5.3.3 Core API Routes}
+
+The document routes (\texttt{routes/documents.ts}) implement the following endpoints:
+
+\begin{itemize}
+    \item \textbf{\texttt{POST /api/documents}} --- Upload a new document. Accepts multipart form data (PDF file + metadata). Uploads the PDF to Cloudinary \citeref{5}, validates the approval chain hierarchy (each approver must have rank $\geq$ the previous), prevents self-approval and duplicates, and creates the Document with nested ApprovalSteps, AuditEntry, and DocumentVersion records.
+
+    \item \textbf{\texttt{POST /api/documents/analyze}} --- AI document analysis. Extracts text from the uploaded PDF via \texttt{pdf-parse}, sends it to the Groq LLM API \citeref{2} with a structured prompt, and returns a JSON response containing the AI-generated title (max 60 chars) and summary (2--3 sentences). Handles scanned PDFs (fewer than 30 extractable characters) with a filename-based fallback.
+
+    \item \textbf{\texttt{POST /api/documents/:id/approve}} --- Approve a document. Validates that the requester is the current pending approver. Requires 1--20 signature placements. Within a Prisma transaction: marks the step as approved, saves placements with coordinates and signature images, creates an audit entry, and either fully approves the document or advances the next step. Fires email notifications \citeref{6} for progress updates, chain updates, and step advance.
+
+    \item \textbf{\texttt{POST /api/documents/:id/reject}} --- Reject a document. Updates the step and document status within a transaction, then generates an AI-drafted rejection email \citeref{2} with a professional, empathetic tone and sends it to the sender.
+
+    \item \textbf{\texttt{POST /api/documents/:id/revise}} --- Revise a rejected document. Deletes all placements, resets approval steps, uploads the new PDF, increments the version, and notifies the first approver.
+
+    \item \textbf{\texttt{POST /api/documents/bulk-action}} --- Bulk approve or reject up to 20 documents. Each document is processed independently in its own transaction.
+
+    \item \textbf{\texttt{GET /api/documents/:id/signed-pdf}} --- Dynamically generates the signed PDF using \texttt{pdf-lib} \citeref{8}. Fetches the original PDF from Cloudinary, embeds signature images (PNG/JPEG with aspect-ratio scaling) or draws text-based fallback boxes at the stored percentage-based coordinates, and streams the result.
+
+    \item \textbf{\texttt{GET /api/documents/:id/pdf}} --- Proxies the original PDF from Cloudinary for secure inline viewing. Supports token-based auth via query parameter for iframe embedding.
+\end{itemize}
+
+\subsection*{5.3.4\quad Email Notification System}
+\addcontentsline{toc}{subsection}{5.3.4 Email Notification System}
+
+The email service (\texttt{lib/email.ts}) \citeref{6} implements six HTML email templates:
+
+\begin{enumerate}
+    \item \textbf{Step Advance:} Notifies the next approver that a document is waiting for their review.
+    \item \textbf{Approval Progress:} Informs the sender with a visual progress bar showing X of Y approvals complete.
+    \item \textbf{Chain Update:} Notifies all previous approvers about the latest approval with a verification status list.
+    \item \textbf{Full Approval:} Congratulates the sender that the document has been fully approved and archived.
+    \item \textbf{Rejection:} Sends an AI-drafted, empathetic rejection email with the approver's comment.
+    \item \textbf{Reminder:} Warns the pending approver about inactivity (sent by the cron scheduler).
+\end{enumerate}
+
+The service uses Nodemailer with configurable SMTP transport. If SMTP credentials are not provided, it falls back to a console logger that prints email contents to the terminal for development.
+
+\subsection*{5.3.5\quad Background Job --- Reminder Cron}
+\addcontentsline{toc}{subsection}{5.3.5 Background Job --- Reminder Cron}
+
+A \texttt{node-cron} \citeref{7} job runs every hour to detect stale approval steps. It queries for all approval steps that are ``pending'' where the associated document's \texttt{updatedAt} is more than 48 hours ago and no reminder has been sent within the last 48 hours (spam prevention via the \texttt{lastReminder} timestamp). For each stale step, it sends a reminder email and creates an audit entry of type \texttt{reminder\_sent}.
+
+% ── 5.4 Integration ─────────────────────────────────────────────────────────
+\section*{5.4\quad Integration}
+\addcontentsline{toc}{section}{5.4 Integration}
+
+This section describes how the frontend, backend, AI services, and external platforms are integrated into a cohesive system.
+
+\subsection*{5.4.1\quad Frontend--Backend Communication}
+\addcontentsline{toc}{subsection}{5.4.1 Frontend--Backend Communication}
+
+All frontend--backend communication occurs over REST/HTTP using a centralized API client (\texttt{lib/api.ts}):
+
+\begin{itemize}
+    \item The \texttt{fetchWithAuth()} wrapper auto-attaches the JWT Bearer token from \texttt{localStorage} to every request.
+    \item For JSON requests, the \texttt{Content-Type: application/json} header is set automatically.
+    \item For file uploads (\texttt{FormData}), the \texttt{Content-Type} header is explicitly removed to let the browser set the correct \texttt{multipart/form-data} boundary.
+    \item Non-OK HTTP responses are parsed for error messages and thrown as JavaScript errors with descriptive text.
+    \item The backend API URL is configurable via the \texttt{VITE\_API\_URL} environment variable, defaulting to \texttt{http://localhost:5001/api}.
+\end{itemize}
+
+\subsection*{5.4.2\quad AI Integration (Groq LLM)}
+\addcontentsline{toc}{subsection}{5.4.2 AI Integration (Groq LLM)}
+
+The platform integrates with the Groq API \citeref{2} at two points in the workflow:
+
+\begin{enumerate}
+    \item \textbf{Document Analysis (upload time):} The \texttt{callGroq()} helper sends a system prompt and user message to the \texttt{llama-3.3-70b-versatile} model via the OpenAI-compatible chat completions endpoint. The prompt instructs the model to return a JSON object with \texttt{title} (max 60 characters) and \texttt{summary} (2--3 sentences). The response is parsed with markdown code block stripping for robustness (the model sometimes wraps JSON in \texttt{```json} fences). If the API call fails, the system falls back to extracting the title from the first line of the PDF text and using the first 300 characters as the summary.
+
+    \item \textbf{Rejection Email Drafting (reject time):} When an approver rejects a document, the backend generates an AI-drafted email body by sending the rejection comment, document title, approver name, and sender name to the LLM. The prompt requests a professional, empathetic email body of 3--4 sentences. This AI-drafted body is embedded in the rejection email template and sent to the document sender.
+\end{enumerate}
+
+\subsection*{5.4.3\quad Cloudinary Integration}
+\addcontentsline{toc}{subsection}{5.4.3 Cloudinary Integration}
+
+PDF document storage is handled via Cloudinary \citeref{5} with the \texttt{multer-storage-cloudinary} adapter:
+
+\begin{itemize}
+    \item \textbf{Upload:} PDFs are uploaded as raw resources to a \texttt{docflow-uploads} folder on Cloudinary. The returned secure URL is stored in the \texttt{Document.fileName} field.
+    \item \textbf{Immutability:} Once uploaded, the original PDF is never modified. All signature overlays are applied dynamically during signed PDF generation.
+    \item \textbf{Retrieval:} The \texttt{GET /api/documents/:id/pdf} endpoint fetches the PDF from the Cloudinary URL and proxies it to the frontend with appropriate headers for inline display. This proxy pattern enables JWT-based access control on PDF viewing.
+    \item \textbf{Signed PDF Generation:} The \texttt{GET /api/documents/:id/signed-pdf} endpoint fetches the original PDF from Cloudinary, loads it into \texttt{pdf-lib} \citeref{8}, iterates through all approved approval steps, converts percentage-based coordinates to absolute PDF coordinates (with Y-axis inversion for the bottom-up PDF coordinate system), embeds signature images or draws text-based fallback boxes, and streams the merged result.
+\end{itemize}
+
+\subsection*{5.4.4\quad End-to-End Data Flow}
+\addcontentsline{toc}{subsection}{5.4.4 End-to-End Data Flow}
+
+The complete data transformation pipeline from user action to system response:
+
+\begin{enumerate}
+    \item \textbf{User uploads PDF} $\rightarrow$ Frontend sends \texttt{FormData} via \texttt{fetchWithAuth()} $\rightarrow$ Express receives multipart data via Multer $\rightarrow$ Multer-Cloudinary uploads the file $\rightarrow$ Cloudinary returns CDN URL $\rightarrow$ Prisma creates Document + ApprovalSteps + AuditEntry + DocumentVersion in PostgreSQL $\rightarrow$ Nodemailer sends step-advance email to first approver $\rightarrow$ Frontend refreshes document list via \texttt{refreshDocuments()}.
+
+    \item \textbf{Approver approves} $\rightarrow$ Frontend sends placements array (coordinates + base64 signature images) via \texttt{fetchWithAuth()} $\rightarrow$ Express validates JWT + role + current-approver status $\rightarrow$ Prisma transaction: update step, create placements, create audit entry, advance chain or mark approved $\rightarrow$ Nodemailer sends progress email to sender + chain update to previous approvers + advance email to next approver $\rightarrow$ Frontend refreshes.
+
+    \item \textbf{User downloads signed PDF} $\rightarrow$ Frontend links to \texttt{/api/documents/:id/signed-pdf?token=...} $\rightarrow$ Express validates token, checks access $\rightarrow$ Fetches original PDF from Cloudinary $\rightarrow$ pdf-lib loads PDF, embeds signatures at stored coordinates $\rightarrow$ Streams merged PDF to browser.
+\end{enumerate}
+
+\subsection*{5.4.5\quad Containerized Deployment}
+\addcontentsline{toc}{subsection}{5.4.5 Containerized Deployment}
+
+Both services are containerized using Docker \citeref{9} for portable, reproducible deployment:
+
+\begin{itemize}
+    \item \textbf{Frontend container:} Multi-stage build producing an Nginx-based image serving static assets with SPA routing fallback.
+    \item \textbf{Backend container:} Node.js image running the compiled TypeScript server with environment variables injected via \texttt{.env} files.
+    \item \textbf{Environment configuration:} All secrets (database URL, JWT secret, Groq API key, Cloudinary credentials, SMTP settings) are managed via \texttt{.env} files with documented \texttt{.env.example} templates. The backend validates critical variables at startup and refuses to start without \texttt{JWT\_SECRET}.
+\end{itemize}
+
+% ── Chapter 6: Modern Engineering Tools Used ──────────────────────────────────
+\chapter*{6.\quad Modern Engineering Tools Used}
+\addcontentsline{toc}{chapter}{6. Modern Engineering Tools Used}
+
+\vspace{0.5cm}
+
+\renewcommand{\arraystretch}{1.3}
+
+\begin{table}[h!]
+\small
+\centering
+\begin{tabularx}{\textwidth}{|p{2.2cm}|p{4cm}|X|}
+\hline
+\rowcolor{gray!20}
+\textbf{Category} & \textbf{Tool / Technology} & \textbf{Purpose} \\
+\hline
+
+\multirow{5}{*}{\textbf{Frontend}}
+& React 18 + TypeScript
+& Component-driven UI with type safety for dashboard, review, upload, archive, and settings pages \\
+\cline{2-3}
+& Vite + SWC
+& Fast build tool with hot module replacement and optimized production bundling \\
+\cline{2-3}
+& Tailwind CSS + Shadcn/ui
+& Utility-first styling with accessible, pre-built UI components (Dialog, Sheet, Tabs, Toast) \\
+\cline{2-3}
+& PDF.js + react-pdf
+& Client-side PDF rendering with multi-page navigation and click-to-place signature support \\
+\cline{2-3}
+& TanStack React Query
+& Server state management with caching, background refetching, and optimistic updates \\
+\hline
+
+\multirow{4}{*}{\textbf{Backend}}
+& Node.js + Express 5
+& REST API server with middleware chain, rate limiting, and security headers \\
+\cline{2-3}
+& Prisma ORM
+& Type-safe database queries, migrations, relations, and transactional operations \\
+\cline{2-3}
+& pdf-lib
+& Server-side PDF manipulation for dynamic signature overlay and signed PDF generation \\
+\cline{2-3}
+& pdf-parse
+& PDF text extraction for AI analysis pipeline \\
+\hline
+
+\multirow{2}{*}{\textbf{AI}}
+& Groq API (Llama 3.3 70B)
+& Document title/summary generation and AI-drafted rejection email composition \\
+\cline{2-3}
+& OpenAI-compatible API
+& Standardized LLM integration with temperature and token control \\
+\hline
+
+\multirow{2}{*}{\textbf{Database}}
+& PostgreSQL (Supabase)
+& Relational database for users, documents, approval chains, signatures, and audit logs \\
+\cline{2-3}
+& Cloudinary + Multer
+& Immutable PDF storage with CDN delivery and multipart upload handling \\
+\hline
+
+\textbf{Email}
+& Nodemailer (SMTP)
+& Styled HTML email notifications with 6 template types and console fallback \\
+\hline
+
+\textbf{Scheduler}
+& node-cron
+& Hourly background job for 48-hour inactivity reminder automation \\
+\hline
+
+\textbf{Auth}
+& JWT + bcryptjs
+& Stateless authentication with password hashing and 7-day token expiry \\
+\hline
+
+\textbf{DevOps}
+& Docker (Multi-stage)
+& Containerized frontend (Nginx) and backend services for portable deployment \\
+\hline
+
+\textbf{VCS}
+& Git \& GitHub
+& Version control, collaboration, and branch management \\
+\hline
+
+\end{tabularx}
+\end{table}
+
+% ── Chapter 7: Any Achievement ───────────────────────────────────────────────
+\chapter*{7.\quad Any Achievement}
+\addcontentsline{toc}{chapter}{7. Any Achievement (Job opportunity, project sponsorship, patent, commercial product, research publications, pre-placement offers, a strong professional network etc.)}
+
+The DocFlow mini project led to several significant technical and professional achievements, reflecting strong full-stack engineering capabilities and production-level system design experience:
+
+\begin{itemize}
+    \item \textbf{AI-Integrated Document Processing:} Designed and implemented a complete \textbf{AI-powered document analysis pipeline} that extracts text from PDFs and generates professional titles and summaries using the Groq LLM API \citeref{2} (Llama 3.3 70B model) --- with graceful fallback for scanned/image-based PDFs and API failures. Extended the AI integration to generate \textbf{empathetic, professional rejection emails} dynamically, demonstrating practical LLM application in institutional workflows.
+
+    \item \textbf{Digital Signature Placement System:} Built a sophisticated \textbf{drag-and-drop signature placement system} with multi-page PDF support, a personal signature/stamp gallery, percentage-based coordinate storage for resolution independence, and server-side signed PDF generation using \texttt{pdf-lib} \citeref{8} --- demonstrating expertise in both interactive frontend development and server-side PDF manipulation.
+
+    \item \textbf{Hierarchical Approval Workflow Engine:} Implemented a complete \textbf{sequential approval workflow engine} with strict hierarchy enforcement, transactional state management using Prisma \citeref{3}, chain reset on revision, version tracking, and bulk action support --- reflecting deep understanding of state machine design and database transaction patterns.
+
+    \item \textbf{Multi-Template Notification System:} Developed a comprehensive \textbf{email notification system} \citeref{6} with six distinct HTML email templates (step advance, approval progress with visual progress bars, full approval, AI-drafted rejection, chain update with verification status, and automated reminders), configurable SMTP transport with console fallback, and spam-prevention logic in the cron scheduler \citeref{7}.
+
+    \item \textbf{Production-Ready Security Architecture:} Configured a hardened \textbf{Express.js server} with JWT authentication, bcrypt password hashing, role-based access control enforced at both frontend and backend layers, rate limiting, comprehensive security headers, document access scoping, and input validation \citeref{4} --- ensuring the application meets production security standards.
+
+    \item \textbf{Immutable Document Architecture:} Designed an \textbf{immutable document storage system} where original PDFs on Cloudinary \citeref{5} are never modified. Signatures are stored as coordinate-based placements and dynamically overlaid during download --- preserving document integrity and enabling full audit trail reconstruction.
+
+    \item \textbf{Containerized Deployment:} Containerized the entire application using \textbf{Docker} \citeref{9} with multi-stage builds, achieving optimized image sizes with Nginx-based frontend serving and SPA routing support.
+\end{itemize}
+
+% ── Chapter 8: Outcome / Results ─────────────────────────────────────────────
+\chapter*{8.\quad Outcome / Results of Mini Project}
+\addcontentsline{toc}{chapter}{8. Outcome / Results of Mini Project}
+
+All implemented features are successfully integrated into the DocFlow platform and operate cohesively across the frontend, backend, and AI infrastructure. The system demonstrates AI-powered automation, secure document handling, and an intuitive user interface.
+
+\vspace{0.4cm}
+
+\renewcommand{\arraystretch}{1.2}
+\begin{table}[H]
+\centering
+\caption{Final Deliverable Status}
+\small
+\vspace{0.3cm}
+\begin{tabularx}{\textwidth}{|p{3.6cm}|X|>{\centering\arraybackslash}p{2.0cm}|}
+\hline
+\rowcolor{headerblue}
+\textcolor{white}{\textbf{Deliverable}} & \textcolor{white}{\textbf{Description}} & \textcolor{white}{\textbf{Status}} \\
+\hline
+\rowcolor{rowgray}
+Document Upload \& AI Analysis & PDF upload to Cloudinary \citeref{5}, text extraction, Groq LLM \citeref{2} title/summary generation with scanned PDF fallback, and guided upload wizard & \textbf{Complete} \\
+\hline
+Hierarchical Approval Engine & Sequential approval chain with hierarchy validation, transactional state management \citeref{3}, revision support, bulk actions, and five roles with distinct access & \textbf{Complete} \\
+\hline
+\rowcolor{rowgray}
+Signature Placement System & Drag-and-drop signature placement, personal gallery, auto-placement detection, and dynamic signed PDF generation using pdf-lib \citeref{8} & \textbf{Complete} \\
+\hline
+Email Notification System & Six email templates \citeref{6}, AI-drafted rejection emails \citeref{2}, automated 48-hour reminders \citeref{7}, SMTP transport with console fallback & \textbf{Complete} \\
+\hline
+\rowcolor{rowgray}
+Dashboard \& Archive & Stats cards, status/category filters, search, bulk selection, document archive with grid/list views, and notification bell with pending count & \textbf{Complete} \\
+\hline
+Three-Panel Review Page & AI summary panel, PDF viewer with signature overlay, approval/rejection controls, audit log, version history, and revision upload & \textbf{Complete} \\
+\hline
+\rowcolor{rowgray}
+Security \& Configuration & JWT auth, bcrypt passwords, rate limiting, security headers, role-based access control \citeref{4}, and Docker containerization \citeref{9} & \textbf{Complete} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ── Chapter 9: Conclusion ────────────────────────────────────────────────────
+\chapter*{9.\quad Conclusion}
+\addcontentsline{toc}{chapter}{9. Conclusion}
+
+The DocFlow mini project provided a comprehensive, end-to-end engineering experience spanning AI integration \citeref{2}, backend API design, PDF processing \citeref{8}, frontend development, email automation \citeref{6}, security architecture \citeref{4}, and containerized deployment \citeref{9}. Over the course of the project, the platform evolved from a conceptual idea into a fully functional document approval system capable of handling hierarchical multi-level approvals, AI-powered document analysis, drag-and-drop digital signatures, and automated inactivity detection \citeref{7}.
+
+The work undertaken during this mini project went significantly beyond typical academic project boundaries. Integrating an LLM API \citeref{2} for both document analysis and rejection email generation --- with graceful fallbacks for API failures and scanned PDFs --- required a practical understanding of AI service integration patterns. Implementing a dynamic signed PDF generation pipeline using \texttt{pdf-lib} \citeref{8} --- where the original document is never modified and signatures are overlaid on demand from coordinate-based placements --- demonstrates a production mindset centered on document integrity. Building a six-template email notification system \citeref{6} with an hourly cron scheduler \citeref{7} that includes spam prevention logic reflects attention to operational robustness.
+
+From a technical perspective, the project reinforced several key engineering principles: the importance of enforcing business rules at the API layer rather than relying on frontend validation \citeref{4}; the value of database transactions for maintaining data consistency during multi-step approval workflows \citeref{3}; the benefit of percentage-based coordinate storage for resolution-independent signature placement; and the operational discipline of immutable document storage \citeref{5} paired with on-demand PDF generation \citeref{8}.
+
+From a professional perspective, collaborating on a multi-member team with clearly divided ownership --- each member responsible for distinct vertical slices of the system --- mirrored real-world software development practices. The experience of integrating independently developed modules into a coherent, deployable product underlined the importance of clear API contracts, consistent data models \citeref{3}, and structured code organization.
+
+\vspace{0.5cm}
+
+% ── Chapter 10: References ────────────────────────────────────────────────────
+\chapter*{10.\quad References}
+\addcontentsline{toc}{chapter}{10. References}
+
+\begin{enumerate}[leftmargin=1.5em, label={[\arabic*]}]
+
+    \item W. M. Rowan, ``Digitizing institutional workflows: How technology can transform administrative processes in higher education,'' \textit{Journal of Educational Technology \& Society}, vol. 24, no. 2, 2021.
+
+    \item Groq Inc., ``Groq API documentation --- Chat completions,'' 2024. [Online]. Available: \url{https://console.groq.com/docs/api-reference}
+
+    \item Prisma, ``Prisma ORM documentation --- Transactions and batch queries,'' 2024. [Online]. Available: \url{https://www.prisma.io/docs}
+
+    \item Express.js, ``Express security best practices,'' 2024. [Online]. Available: \url{https://expressjs.com/en/advanced/best-practice-security.html}
+
+    \item Cloudinary, ``Image and file upload API reference,'' 2024. [Online]. Available: \url{https://cloudinary.com/documentation/image_upload_api_reference}
+
+    \item Nodemailer, ``Nodemailer documentation --- SMTP transport,'' 2024. [Online]. Available: \url{https://nodemailer.com/smtp}
+
+    \item node-cron, ``Task scheduling for Node.js,'' npm, 2024. [Online]. Available: \url{https://www.npmjs.com/package/node-cron}
+
+    \item pdf-lib, ``Create and modify PDF documents in any JavaScript environment,'' 2024. [Online]. Available: \url{https://pdf-lib.js.org}
+
+    \item Docker Inc., ``Docker documentation --- Multi-stage builds,'' 2024. [Online]. Available: \url{https://docs.docker.com/build/building/multi-stage}
+
+\end{enumerate}
+
+\end{document}
